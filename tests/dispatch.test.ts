@@ -153,4 +153,53 @@ describe("dispatch", () => {
     expect(result.isError).toBe(false);
     JSON.parse(result.text);
   });
+
+  test("get_media returns content type, size, and base64 bytes as JSON", async () => {
+    const result = await mcp.call("admin_audit", {
+      operation: "get_media",
+      params: { id: "demo" },
+    });
+    expect(result.isError).toBe(false);
+    const parsed = JSON.parse(result.text);
+    expect(typeof parsed.content_type).toBe("string");
+    expect(typeof parsed.size_bytes).toBe("number");
+    expect(typeof parsed.base64).toBe("string");
+    expect(Buffer.from(parsed.base64, "base64").length).toBe(parsed.size_bytes);
+  });
+
+  test("get_media rejects dot-segment ids instead of hitting the wrong endpoint", async () => {
+    const result = await mcp.call("admin_audit", {
+      operation: "get_media",
+      params: { id: ".." },
+    });
+    expect(result.isError).toBe(true);
+    expect(result.text).toContain("invalid path parameter");
+    // The normalized URL would have hit /admin (404), never the media route.
+    expect(mock.requests.has("GET /admin")).toBe(false);
+    expect(mock.requests.has("GET /admin/media/..")).toBe(false);
+  });
+
+  test("get_model_metadata requires provider and model", async () => {
+    const result = await mcp.call("admin_models", {
+      operation: "get_model_metadata",
+      params: {},
+    });
+    expect(result.isError).toBe(true);
+    expect(result.text).toContain("provider");
+    expect(result.text).toContain("model");
+  });
+
+  test("get_model_metadata with provider and model returns JSON", async () => {
+    const result = await mcp.call("admin_models", {
+      operation: "get_model_metadata",
+      params: { provider: "demo-provider", model: "demo-model" },
+    });
+    expect(result.isError).toBe(false);
+    JSON.parse(result.text);
+    // The mock only checks non-empty values, so verify the actual query sent
+    // to the gateway — swapped provider/model must not pass.
+    const sent = mock.requestUrls.find((line) => line.startsWith("GET /admin/models/metadata"));
+    expect(sent).toContain("provider=demo-provider");
+    expect(sent).toContain("model=demo-model");
+  });
 });
