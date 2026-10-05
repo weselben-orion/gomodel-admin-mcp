@@ -316,7 +316,9 @@ export const WRITE_TOOLS: WriteTool[] = [
       proxy_url: z
         .string()
         .optional()
-        .describe("Outbound proxy URL; send the masked form back to keep the stored proxy password"),
+        .describe(
+          "Outbound proxy URL for provider traffic, e.g. socks5://user:pass@host:1080; omit to leave the stored proxy untouched, send the masked password form (e.g. xxxxx) back to keep the stored proxy password, send \"\" to clear the configured proxy",
+        ),
       api_version: z.string().optional().describe("API version to target"),
       backend: z.string().optional().describe("Override the backend implementation"),
       auth_type: z.string().optional().describe("Authentication type"),
