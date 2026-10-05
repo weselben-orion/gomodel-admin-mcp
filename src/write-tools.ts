@@ -231,13 +231,19 @@ export const WRITE_TOOLS: WriteTool[] = [
     schema: {
       ...rateLimitScopeArgs,
       ...rateLimitKeyArgs,
+      per_child: z
+        .boolean()
+        .optional()
+        .describe(
+          "Apply the limit per child (requires per_child quota templates on the gateway)",
+        ),
       max_requests: z.number().optional().describe("Maximum requests per window"),
       max_tokens: z.number().optional().describe("Maximum tokens per window"),
     },
     body: (args) => ({
       ...pick(args, ["scope", "subject", "user_path"]),
       limit_key: pick(args, ["period", "period_seconds"]),
-      ...pick(args, ["max_requests", "max_tokens"]),
+      ...pick(args, ["per_child", "max_requests", "max_tokens"]),
     }),
   },
   {
