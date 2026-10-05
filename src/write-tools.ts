@@ -109,22 +109,54 @@ export const WRITE_TOOLS: WriteTool[] = [
         )
         .optional()
         .describe("Load-balancing destinations; takes precedence over target_model"),
-      strategy: z.string().optional().describe('Balancing strategy: "round_robin", "cost", or "adaptive"'),
+      strategy: z.string().optional().describe('Balancing strategy: "round_robin", "cost", "failover", "adaptive", or "plugin"'),
+      strategy_plugin: z
+        .string()
+        .optional()
+        .describe(
+          'Routing-strategy plugin name; REQUIRED when strategy is "plugin" (the gateway 400s without it, and 400s on an unknown name or one that is not a loaded route plugin). Silently ignored when strategy is anything else. Valid names and the shape strategy_config must take come from GET /admin/plugins.',
+        ),
+      strategy_config: z
+        .record(z.unknown())
+        .optional()
+        .describe(
+          "Route-scoped settings for the strategy plugin, validated against its schema (see GET /admin/plugins). Only applies when strategy is \"plugin\".",
+        ),
       session_affinity: z
         .boolean()
         .optional()
         .describe("Keep a session on its previous target (default true)"),
+      failover: z
+        .boolean()
+        .optional()
+        .describe(
+          "Retry a failed request on the remaining targets. Upsert is full-replace for this field: on a new row an omitted value means enabled, but on an existing row omitting it resets the stored setting to the gateway default.",
+        ),
+      slowdown: z
+        .number()
+        .optional()
+        .describe(
+          "Extra-time factor; the gateway accepts 0 (disabled) or 0.1 to 10 and 400s anything else, so the range is not enforced client-side.",
+        ),
       user_paths: z.array(z.string()).optional().describe("Restrict to these user paths"),
       description: z.string().optional(),
       enabled: z.boolean().optional().describe("Default true; preserves existing value when omitted"),
     },
+    // pick() drops only undefined, so false and 0 survive. That matters here:
+    // failover: false disables failover and slowdown: 0 disables slowdown, and a
+    // truthiness filter would silently send the gateway defaults instead. Adding a
+    // field to the schema means adding it here too — otherwise it is dropped.
     body: (args) => pick(args, [
       "source",
       "old_source",
       "target_model",
       "targets",
       "strategy",
+      "strategy_plugin",
+      "strategy_config",
       "session_affinity",
+      "failover",
+      "slowdown",
       "user_paths",
       "description",
       "enabled",

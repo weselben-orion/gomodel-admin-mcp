@@ -281,6 +281,8 @@ export function createMockServer() {
   const requests = new Map();
   /** @type {string[]} every request line "METHOD /path?query", in arrival order */
   const requestUrls = [];
+  /** @type {{method: string, path: string, body: unknown}[]} parsed request bodies, in arrival order */
+  const requestBodies = [];
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://mock");
@@ -352,6 +354,7 @@ export function createMockServer() {
         return send(err.status, err.body);
       }
     }
+    requestBodies.push({ method, path: pathname, body });
 
     // Required query params.
     const missingQuery = (route.queryRequired ?? []).filter((name) => !url.searchParams.get(name));
@@ -402,6 +405,7 @@ export function createMockServer() {
     routes,
     requests,
     requestUrls,
+    requestBodies,
     /** Listen on an ephemeral port; resolves to the base URL. */
     listen() {
       return new Promise((resolve) => {
