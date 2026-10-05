@@ -109,11 +109,27 @@ export const WRITE_TOOLS: WriteTool[] = [
         )
         .optional()
         .describe("Load-balancing destinations; takes precedence over target_model"),
-      strategy: z.string().optional().describe('Balancing strategy: "round_robin", "cost", or "adaptive"'),
+      strategy: z.string().optional().describe('Balancing strategy: "round_robin", "cost", "failover", "adaptive", or "plugin"'),
+      strategy_plugin: z
+        .string()
+        .optional()
+        .describe('Routing-strategy plugin name for strategy "plugin"'),
+      strategy_config: z
+        .record(z.unknown())
+        .optional()
+        .describe("Route-scoped settings for the strategy plugin, validated against its schema"),
       session_affinity: z
         .boolean()
         .optional()
         .describe("Keep a session on its previous target (default true)"),
+      failover: z
+        .boolean()
+        .optional()
+        .describe("Retry a failed request on the remaining targets (default true)"),
+      slowdown: z
+        .number()
+        .optional()
+        .describe("Extra-time factor from 0.1 to 10; zero disables it"),
       user_paths: z.array(z.string()).optional().describe("Restrict to these user paths"),
       description: z.string().optional(),
       enabled: z.boolean().optional().describe("Default true; preserves existing value when omitted"),
@@ -124,7 +140,11 @@ export const WRITE_TOOLS: WriteTool[] = [
       "target_model",
       "targets",
       "strategy",
+      "strategy_plugin",
+      "strategy_config",
       "session_affinity",
+      "failover",
+      "slowdown",
       "user_paths",
       "description",
       "enabled",
