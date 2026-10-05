@@ -65,7 +65,8 @@ Areas: `admin_runtime`, `admin_runtime_control`, `admin_usage`,
   `model`, `provider/model`)
 - **rate_limits** — upsert, delete, reset counters
 - **workflows** / **workflows_control** — list/get, create, deactivate
-- **mcp_servers** / **mcp_servers_control** — list, catalogs; upsert,
+- **mcp_servers** / **mcp_servers_control** — list, catalogs, virtual servers;
+  upsert,
   delete, reconnect
 - **docs_*** — live GoModel docs from GitHub (Mintlify navigation index,
   ripgrep-style search, page fetch; anonymous reads, 15-minute cache)

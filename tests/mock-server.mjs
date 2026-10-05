@@ -98,6 +98,7 @@ const GLOBAL_ROUTES = new Set([
   "PUT /admin/virtual-models",
   "DELETE /admin/virtual-models",
   "GET /admin/mcp-servers",
+  "GET /admin/mcp-virtual-servers",
   "PUT /admin/mcp-servers",
   "DELETE /admin/mcp-servers/{name}",
   "POST /admin/mcp-servers/{name}/reconnect",

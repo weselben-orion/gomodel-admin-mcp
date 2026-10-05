@@ -121,6 +121,7 @@ export const READ_GROUPS: ToolGroup[] = [
     operations: ops([
       ["list_mcp_servers", "config-declared and admin-managed"],
       ["get_mcp_server_catalog", "one server's tool/prompt/resource catalog"],
+      ["list_mcp_virtual_servers", "virtual servers and their membership/conflicts"],
     ]),
     kind: "read",
   },
