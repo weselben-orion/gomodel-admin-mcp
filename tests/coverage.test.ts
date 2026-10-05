@@ -248,6 +248,46 @@ describe("Forward sweep — spec paths map to group operations", () => {
 });
 
 /* ================================================================ */
+/* Request body shapes                                              */
+/* ================================================================ */
+
+describe("Write tool body shapes", () => {
+  const upsertRateLimit = writeMap.get("upsert_rate_limit")!;
+
+  test("upsert_rate_limit passes per_child through when set", () => {
+    const body = upsertRateLimit.body({
+      scope: "provider",
+      subject: "openai/gpt-4o",
+      period: "1m",
+      per_child: true,
+    });
+    expect(body.per_child).toBe(true);
+    expect(body.limit_key).toEqual({ period: "1m" });
+  });
+
+  test("upsert_rate_limit omits per_child when unset", () => {
+    const body = upsertRateLimit.body({
+      scope: "provider",
+      subject: "openai/gpt-4o",
+      period: "1m",
+    });
+    // Omitted, not false: a partial update must not clobber an existing
+    // per-child rule (Go's non-pointer bool would decode false as "off").
+    expect("per_child" in body).toBe(false);
+  });
+
+  test("upsert_rate_limit sends explicit per_child false when asked", () => {
+    const body = upsertRateLimit.body({
+      scope: "provider",
+      subject: "openai/gpt-4o",
+      period: "1m",
+      per_child: false,
+    });
+    expect(body.per_child).toBe(false);
+  });
+});
+
+/* ================================================================ */
 /* Reverse sweep: every group op maps to a route in mock            */
 /* ================================================================ */
 
