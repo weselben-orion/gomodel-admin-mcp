@@ -238,6 +238,12 @@ export const ADMIN_TOOLS: AdminTool[] = [
     description: "Inspect one MCP server's current tool/prompt/resource catalog.",
   },
   {
+    name: "list_mcp_virtual_servers",
+    path: "/mcp-virtual-servers",
+    description:
+      "List virtual MCP servers (config-declared, read-only). Each serves a subset of the MCP servers at /mcp/{name}; missing_servers lists members no server matches, conflict explains why a virtual server is not served.",
+  },
+  {
     name: "list_failover_rules",
     path: "/failover",
     description: "List failover mappings between models.",
