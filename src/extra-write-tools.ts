@@ -65,6 +65,10 @@ export const EXTRA_WRITE_TOOLS: WriteTool[] = [
         .array(z.string())
         .optional()
         .describe("Tools to hide from the server's catalog"),
+      disallowed_user_paths: z
+        .array(z.string())
+        .optional()
+        .describe("User paths denied access to this server"),
       user_paths: z
         .array(z.string())
         .optional()
@@ -82,6 +86,7 @@ export const EXTRA_WRITE_TOOLS: WriteTool[] = [
         "enabled",
         "allowed_tools",
         "disallowed_tools",
+        "disallowed_user_paths",
         "user_paths",
         "tool_timeout_seconds",
       ]),
