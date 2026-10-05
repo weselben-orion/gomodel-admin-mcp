@@ -9,11 +9,17 @@ import { createMockServer } from "./mock-server.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
-/** Start the mock admin API. Returns { url, requests, requestUrls, close }. */
+/** Start the mock admin API. Returns { url, requests, requestUrls, requestBodies, close }. */
 export async function startMock() {
   const mock = createMockServer();
   const url = await mock.listen();
-  return { url, requests: mock.requests, requestUrls: mock.requestUrls, close: () => mock.close() };
+  return {
+    url,
+    requests: mock.requests,
+    requestUrls: mock.requestUrls,
+    requestBodies: mock.requestBodies,
+    close: () => mock.close(),
+  };
 }
 
 /* ------------------------------------------------------------------ */

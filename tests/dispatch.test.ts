@@ -202,4 +202,63 @@ describe("dispatch", () => {
     expect(sent).toContain("provider=demo-provider");
     expect(sent).toContain("model=demo-model");
   });
+
+  test("upsert_virtual_model forwards routing fields on the wire", async () => {
+    const result = await mcp.call("admin_virtual_models", {
+      operation: "upsert_virtual_model",
+      params: {
+        source: "demo-routed",
+        targets: [
+          { provider: "demo-provider", model: "demo-model", weight: 2 },
+          { provider: "demo-provider", model: "demo-model-2" },
+        ],
+        strategy: "plugin",
+        strategy_plugin: "weighted_by_label",
+        strategy_config: { label: "tier", weights: { tier: { gold: 3 } } },
+        session_affinity: true,
+        failover: false,
+        slowdown: 0,
+      },
+    });
+    expect(result.isError).toBe(false);
+
+    const sent = mock.requestBodies
+      .filter((r) => r.method === "PUT" && r.path === "/admin/virtual-models")
+      .at(-1);
+    expect(sent).toBeDefined();
+    // Asserted on the recorded request body, not the tool's return text: the
+    // mock synthesizes its own response payload.
+    expect(sent!.body).toEqual({
+      source: "demo-routed",
+      targets: [
+        { provider: "demo-provider", model: "demo-model", weight: 2 },
+        { provider: "demo-provider", model: "demo-model-2" },
+      ],
+      strategy: "plugin",
+      strategy_plugin: "weighted_by_label",
+      // strategy_config is free-form and must pass through unflattened.
+      strategy_config: { label: "tier", weights: { tier: { gold: 3 } } },
+      session_affinity: true,
+      failover: false,
+      slowdown: 0,
+    });
+  });
+
+  test("upsert_virtual_model body carries no keys the caller omitted", async () => {
+    const result = await mcp.call("admin_virtual_models", {
+      operation: "upsert_virtual_model",
+      params: { source: "demo-plain", target_model: "openai/gpt-4o" },
+    });
+    expect(result.isError).toBe(false);
+
+    const sent = mock.requestBodies
+      .filter((r) => r.method === "PUT" && r.path === "/admin/virtual-models")
+      .at(-1);
+    // Absent routing fields must stay absent so the gateway keeps its own
+    // defaults — pick() drops only undefined, it must not inject nulls.
+    expect(sent!.body).toEqual({
+      source: "demo-plain",
+      target_model: "openai/gpt-4o",
+    });
+  });
 });

@@ -134,6 +134,10 @@ export const WRITE_TOOLS: WriteTool[] = [
       description: z.string().optional(),
       enabled: z.boolean().optional().describe("Default true; preserves existing value when omitted"),
     },
+    // pick() drops only undefined, so false and 0 survive. That matters here:
+    // failover: false disables failover and slowdown: 0 disables slowdown, and a
+    // truthiness filter would silently send the gateway defaults instead. Adding a
+    // field to the schema means adding it here too — otherwise it is dropped.
     body: (args) => pick(args, [
       "source",
       "old_source",
