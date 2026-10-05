@@ -208,6 +208,24 @@ describe("dispatch", () => {
     expect(result.text).toContain("model");
   });
 
+  test("upsert_provider_credential forwards proxy_url in the PUT body", async () => {
+    const proxyUrl = "socks5://user:xxxxx@proxy.internal:1080";
+    const result = await mcp.call("admin_provider_control", {
+      operation: "upsert_provider_credential",
+      params: { name: "proxied", type: "chatgpt", api_keys: ["sk_gom_TEST"], proxy_url: proxyUrl },
+    });
+    expect(result.isError).toBe(false);
+    // Other tests in this file also PUT credentials; take the latest request.
+    const sent = mock.requestBodies.findLast(
+      (entry) => entry.method === "PUT" && entry.path === "/admin/provider-credentials",
+    );
+    if (!sent) throw new Error("no PUT /admin/provider-credentials request reached the mock");
+    const body = sent.body as Record<string, unknown>;
+    expect(body.proxy_url).toBe(proxyUrl);
+    // Neighbouring optional fields stay absent when not supplied.
+    expect("base_url" in body).toBe(false);
+  });
+
   test("get_model_metadata with provider and model returns JSON", async () => {
     const result = await mcp.call("admin_models", {
       operation: "get_model_metadata",
