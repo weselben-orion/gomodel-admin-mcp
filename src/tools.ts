@@ -303,8 +303,9 @@ export const ADMIN_TOOLS: AdminTool[] = [
     description:
       "Get usage breakdown by detected session. Returns a bounded page of request, token, and cost aggregates for detected, user-path-scoped sessions.",
     query: [
+      // /admin/usage/sessions takes no cache_mode filter; session_id and the
+      // rest come from usageFilters.
       ...usageFilters.filter((p) => p.name !== "cache_mode"),
-      { name: "session_id", description: "Filter by exact detected session ID" },
       { name: "limit", description: "Page size (default 50, max 200)" },
       { name: "offset", description: "Offset for pagination" },
     ],
