@@ -72,6 +72,31 @@ jobs:
           node scripts/regenerate-admin-swagger.mjs \
             _swagout/swagger.json _new-admin-swagger.json
 
+      # The PR opened below is pushed with GITHUB_TOKEN, and GitHub
+      # suppresses pull_request runs for GITHUB_TOKEN-authored PRs — ci.yml
+      # never fires on them. That is how a spec that contradicts src/ can
+      # land green and leave main's coverage sweep red. Run the gate here,
+      # inside the run that authors the branch.
+      - name: setup bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.3.14
+
+      - name: validate regenerated spec against the test suite
+        id: gate
+        # Non-fatal: the PR still opens so Ben sees the diff, but the run
+        # ends red when the gate fails (see the final step).
+        continue-on-error: true
+        run: |
+          cp _new-admin-swagger.json spec/admin-swagger.json
+          bun install --frozen-lockfile
+          bun run build
+          if bun test; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: diff against current spec
         id: diff
         run: |
@@ -155,3 +180,10 @@ jobs:
         if: steps.diff.outputs.changed != 'true'
         run: |
           echo "spec/admin-swagger.json already matches gomodel ${{ steps.gomsha.outputs.sha }} — no PR needed."
+
+      - name: fail on spec-vs-src contradiction
+        if: steps.diff.outputs.changed == 'true' && steps.gate.outputs.passed == 'false'
+        run: |
+          echo "::error::Regenerated spec contradicts src/ (coverage sweep failed). Adopt the new endpoint in src/ before merging, or the sweep stays red on main."
+          exit 1
+
