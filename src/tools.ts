@@ -34,6 +34,7 @@ const timeRange: QueryParam[] = [
 
 const usageFilters: QueryParam[] = [
   ...timeRange,
+  { name: "session_id", description: "Filter by exact detected session ID" },
   { name: "model", description: "Filter by model id" },
   { name: "provider", description: "Filter by provider name" },
   { name: "label", description: "Filter by request label" },
@@ -43,6 +44,8 @@ const usageFilters: QueryParam[] = [
 
 const auditFilters: QueryParam[] = [
   ...timeRange,
+  { name: "session_id", description: "Filter by exact session id" },
+  { name: "exclude_operation", description: "Comma-separated endpoint operations to hide, e.g. mcp,provider_passthrough,audio_speech" },
   { name: "requested_model", description: "Filter by requested model id" },
   { name: "provider", description: "Filter by provider name" },
   { name: "method", description: "Filter by HTTP method" },
@@ -134,8 +137,8 @@ export const ADMIN_TOOLS: AdminTool[] = [
     path: "/audit/sessions",
     description: "Get paginated audit sessions (conversation threads).",
     query: [
-      ...auditFilters.filter((p) => p.name !== "search"),
-      { name: "session_id", description: "Filter by session id" },
+      // /audit/sessions filters threads, not entries — no session_id filter.
+      ...auditFilters.filter((p) => p.name !== "search" && p.name !== "session_id"),
       { name: "search", description: "Free-text search" },
     ],
   },
@@ -143,7 +146,7 @@ export const ADMIN_TOOLS: AdminTool[] = [
     name: "get_audit_stats",
     path: "/audit/stats",
     description: "Get time-bucketed request status and latency statistics.",
-    query: timeRange,
+    query: [...timeRange, { name: "user_path", description: "Filter by user path" }],
   },
   {
     name: "get_audit_detail",
@@ -300,7 +303,7 @@ export const ADMIN_TOOLS: AdminTool[] = [
     description:
       "Get usage breakdown by detected session. Returns a bounded page of request, token, and cost aggregates for detected, user-path-scoped sessions.",
     query: [
-      ...usageFilters,
+      ...usageFilters.filter((p) => p.name !== "cache_mode"),
       { name: "session_id", description: "Filter by exact detected session ID" },
       { name: "limit", description: "Page size (default 50, max 200)" },
       { name: "offset", description: "Offset for pagination" },
