@@ -179,6 +179,25 @@ describe("dispatch", () => {
     expect(mock.requests.has("GET /admin/media/..")).toBe(false);
   });
 
+  test("upsert_mcp_server forwards disallowed_user_paths in the request body", async () => {
+    const result = await mcp.call("admin_mcp_servers_control", {
+      operation: "upsert_mcp_server",
+      params: {
+        name: "path-guard",
+        url: "http://localhost:1234",
+        disallowed_user_paths: ["acme/*"],
+      },
+    });
+    expect(result.isError).toBe(false);
+    const sent = mock.requestBodies.find(
+      (entry) => entry.method === "PUT" && entry.path === "/admin/mcp-servers",
+    );
+    expect(sent).toBeDefined();
+    expect((sent!.body as { disallowed_user_paths?: unknown }).disallowed_user_paths).toEqual([
+      "acme/*",
+    ]);
+  });
+
   test("get_model_metadata requires provider and model", async () => {
     const result = await mcp.call("admin_models", {
       operation: "get_model_metadata",

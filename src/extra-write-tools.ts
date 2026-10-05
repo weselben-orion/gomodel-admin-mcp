@@ -32,7 +32,7 @@ export const EXTRA_WRITE_TOOLS: WriteTool[] = [
     method: "PUT",
     path: "/mcp-servers",
     description:
-      "Create or update one admin-managed MCP server. Set slug to derive a lowercase handle (defaults to lowercase name). Headers with value \"***\" preserve the stored header; omit headers entirely to keep existing ones. Only tools not in disallowed_tools are available, and only tools in allowed_tools (if set) are available.",
+      "Create or update one admin-managed MCP server. Set slug to derive a lowercase handle (defaults to lowercase name). Headers with value \"***\" preserve the stored header; omit headers entirely to keep existing ones. Only tools not in disallowed_tools are available, and only tools in allowed_tools (if set) are available. User paths listed in user_paths are granted access to this server; paths in disallowed_user_paths are denied access to it.",
     schema: {
       name: z.string().describe("Display name for the server"),
       slug: z
