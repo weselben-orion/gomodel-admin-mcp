@@ -313,6 +313,10 @@ export const WRITE_TOOLS: WriteTool[] = [
       api_keys: z.array(z.string()).optional().describe("API key(s) for the provider"),
       session_sticky_keys: z.boolean().optional().describe("Bind session cookies to specific provider keys"),
       base_url: z.string().optional().describe("Override the default API base URL"),
+      proxy_url: z
+        .string()
+        .optional()
+        .describe("Outbound proxy URL; send the masked form back to keep the stored proxy password"),
       api_version: z.string().optional().describe("API version to target"),
       backend: z.string().optional().describe("Override the backend implementation"),
       auth_type: z.string().optional().describe("Authentication type"),
@@ -328,7 +332,7 @@ export const WRITE_TOOLS: WriteTool[] = [
     },
     body: (args) => pick(args, [
       "name", "type", "api_keys", "session_sticky_keys",
-      "base_url", "api_version", "backend", "auth_type", "api_mode",
+      "base_url", "proxy_url", "api_version", "backend", "auth_type", "api_mode",
       "vertex_project", "vertex_location", "service_account_file",
       "service_account_json", "service_account_json_base64",
       "gcp_scope", "models", "enabled",
