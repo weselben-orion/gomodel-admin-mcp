@@ -79,13 +79,6 @@ jobs:
       # failing ci.yml never blocked the merge. Run the gate inside the
       # job that authors the branch, where a failure stops this run.
 
-      # Job-level default: the gate below only sets `passed=true` when the
-      # suite really passes, so a skipped or crashed gate (bun install,
-      # tsc) leaves this false and trips the final step.
-      - name: init gate state
-        id: gateinit
-        run: echo "passed=false" >> "$GITHUB_OUTPUT"
-
       - name: diff against current spec
         id: diff
         run: |
