@@ -204,6 +204,10 @@ describe("dispatch", () => {
   });
 
   test("upsert_virtual_model forwards routing fields on the wire", async () => {
+    // Snapshot before the call: requestBodies accumulates for the whole
+    // beforeAll, so slicing from here keeps this test independent of which
+    // other tests in the file have already issued a PUT.
+    const mark = mock.requestBodies.length;
     const result = await mcp.call("admin_virtual_models", {
       operation: "upsert_virtual_model",
       params: {
@@ -223,6 +227,7 @@ describe("dispatch", () => {
     expect(result.isError).toBe(false);
 
     const sent = mock.requestBodies
+      .slice(mark)
       .filter((r) => r.method === "PUT" && r.path === "/admin/virtual-models")
       .at(-1);
     expect(sent).toBeDefined();
@@ -245,6 +250,7 @@ describe("dispatch", () => {
   });
 
   test("upsert_virtual_model body carries no keys the caller omitted", async () => {
+    const mark = mock.requestBodies.length;
     const result = await mcp.call("admin_virtual_models", {
       operation: "upsert_virtual_model",
       params: { source: "demo-plain", target_model: "openai/gpt-4o" },
@@ -252,6 +258,7 @@ describe("dispatch", () => {
     expect(result.isError).toBe(false);
 
     const sent = mock.requestBodies
+      .slice(mark)
       .filter((r) => r.method === "PUT" && r.path === "/admin/virtual-models")
       .at(-1);
     // Absent routing fields must stay absent so the gateway keeps its own

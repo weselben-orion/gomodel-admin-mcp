@@ -113,11 +113,15 @@ export const WRITE_TOOLS: WriteTool[] = [
       strategy_plugin: z
         .string()
         .optional()
-        .describe('Routing-strategy plugin name for strategy "plugin"'),
+        .describe(
+          'Routing-strategy plugin name; REQUIRED when strategy is "plugin" (the gateway 400s without it, and 400s on an unknown name or one that is not a loaded route plugin). Silently ignored when strategy is anything else. Valid names and the shape strategy_config must take come from GET /admin/plugins.',
+        ),
       strategy_config: z
         .record(z.unknown())
         .optional()
-        .describe("Route-scoped settings for the strategy plugin, validated against its schema"),
+        .describe(
+          "Route-scoped settings for the strategy plugin, validated against its schema (see GET /admin/plugins). Only applies when strategy is \"plugin\".",
+        ),
       session_affinity: z
         .boolean()
         .optional()
@@ -125,11 +129,15 @@ export const WRITE_TOOLS: WriteTool[] = [
       failover: z
         .boolean()
         .optional()
-        .describe("Retry a failed request on the remaining targets (default true)"),
+        .describe(
+          "Retry a failed request on the remaining targets. Upsert is full-replace for this field: on a new row an omitted value means enabled, but on an existing row omitting it resets the stored setting to the gateway default.",
+        ),
       slowdown: z
         .number()
         .optional()
-        .describe("Extra-time factor from 0.1 to 10; zero disables it"),
+        .describe(
+          "Extra-time factor; the gateway accepts 0 (disabled) or 0.1 to 10 and 400s anything else, so the range is not enforced client-side.",
+        ),
       user_paths: z.array(z.string()).optional().describe("Restrict to these user paths"),
       description: z.string().optional(),
       enabled: z.boolean().optional().describe("Default true; preserves existing value when omitted"),
