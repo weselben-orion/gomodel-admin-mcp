@@ -1,0 +1,32 @@
+# Groups PRs in GitHub's auto-generated release notes by conventional-commit
+# type. Consumed by the release-notes generator that release.yml enables via
+# generate_release_notes: true — GitHub is the only reader of this file.
+#
+# The generator matches on PR LABELS, which label-prs.yml applies from each
+# PR title's conventional-commit prefix. Label names here and there must
+# stay in sync.
+#
+# Docs: https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+#
+# skip-release is applied by hand (or a future automation) to merge a PR
+# without listing it in the next release's notes.
+changelog:
+  exclude:
+    labels:
+      - skip-release
+  categories:
+    - title: Breaking Changes
+      labels:
+        - breaking
+    - title: Features
+      labels:
+        - feat
+    - title: Bug Fixes
+      labels:
+        - fix
+    - title: Performance
+      labels:
+        - perf
+    - title: Other Changes
+      labels:
+        - "*"
