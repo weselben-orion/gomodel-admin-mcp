@@ -1,0 +1,25 @@
+# release-drafter is used ONLY for autolabeling: label-prs.yml triggers it on
+# pull_request_target, which applies labels from the PR title's
+# conventional-commit prefix and never creates drafts or releases. Disable
+# the releaser explicitly in the workflow, not here. Label names must stay in
+# sync with .github/release.yml, which consumes them for release-note
+# grouping.
+autolabeler:
+  - label: breaking
+    title: '/^(feat|fix|perf|refactor)(\([^)]*\))?!:/'
+  - label: feat
+    title: '/^feat(\([^)]*\))?:/'
+  - label: fix
+    title: '/^fix(\([^)]*\))?:/'
+  - label: perf
+    title: '/^perf(\([^)]*\))?:/'
+  - label: ci
+    title: '/^ci(\([^)]*\))?!?:/'
+  - label: docs
+    title: '/^docs(\([^)]*\))?!?:/'
+  - label: test
+    title: '/^test(\([^)]*\))?!?:/'
+  - label: refactor
+    title: '/^refactor(\([^)]*\))?!?:/'
+  - label: chore
+    title: '/^chore(\([^)]*\))?!?:/'

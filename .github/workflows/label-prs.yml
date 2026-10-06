@@ -1,0 +1,31 @@
+name: label-prs
+
+# Applies conventional-commit type labels from the PR title so GitHub's
+# auto-generated release notes (.github/release.yml) can group by type.
+# release-drafter runs here in label-only mode: pull_request_target performs
+# autolabeling and never drafts a release (no push trigger, and
+# disable-releaser is set). The release flow stays solely in release.yml.
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: label-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  autolabel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: release-drafter/release-drafter@3f0f8700bd0640090fbd7b0a654a9d0bb1c2ecfd # v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-name: release-drafter.yml
+          disable-releaser: true
