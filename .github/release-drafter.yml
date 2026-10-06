@@ -9,6 +9,17 @@
 # release-drafter applies EVERY matching label, so "feat!:" would otherwise
 # earn both "breaking" and "feat", and the notes generator would list the PR
 # under both categories.
+#
+# The `template` block below is required, not decorative: release-drafter
+# validates the config against its FULL releaser schema even in label-only
+# mode (getConfig runs before the disableReleaser short-circuit, and
+# `template` is required there). It is never used for output because
+# label-prs.yml sets disable-releaser: true.
+template: |
+  # What's Changed
+
+  $CHANGES
+
 autolabeler:
   - label: breaking
     title: '/^feat(\([^)]*\))?!:/'
