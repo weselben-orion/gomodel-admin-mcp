@@ -111,6 +111,8 @@ jobs:
           # the published release will carry (grouped per .github/release.yml
           # once label-prs.yml has labeled the PRs). Falls back to the flat
           # commit list when the API call fails or no previous tag exists.
+          # Note: labels applied AFTER this refresh are picked up by the
+          # published notes (generated at finalize) but not by this preview.
           if [ -n "$PREV_TAG" ] && git rev-parse -q --verify "refs/tags/$PREV_TAG" > /dev/null; then
             if ! gh api "repos/$GH_REPO/releases/generate-notes" \
                  -f tag_name="$NEW_TAG" -f previous_tag_name="$PREV_TAG" \

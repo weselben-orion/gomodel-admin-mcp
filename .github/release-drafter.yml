@@ -4,9 +4,20 @@
 # the releaser explicitly in the workflow, not here. Label names must stay in
 # sync with .github/release.yml, which consumes them for release-note
 # grouping.
+#
+# The breaking regexes exclude a trailing "!" so they cannot double-match:
+# release-drafter applies EVERY matching label, so "feat!:" would otherwise
+# earn both "breaking" and "feat", and the notes generator would list the PR
+# under both categories.
 autolabeler:
   - label: breaking
-    title: '/^(feat|fix|perf|refactor)(\([^)]*\))?!:/'
+    title: '/^feat(\([^)]*\))?!:/'
+  - label: breaking
+    title: '/^fix(\([^)]*\))?!:/'
+  - label: breaking
+    title: '/^perf(\([^)]*\))?!:/'
+  - label: breaking
+    title: '/^refactor(\([^)]*\))?!:/'
   - label: feat
     title: '/^feat(\([^)]*\))?:/'
   - label: fix
@@ -14,12 +25,12 @@ autolabeler:
   - label: perf
     title: '/^perf(\([^)]*\))?:/'
   - label: ci
-    title: '/^ci(\([^)]*\))?!?:/'
+    title: '/^ci(\([^)]*\))?:/'
   - label: docs
-    title: '/^docs(\([^)]*\))?!?:/'
+    title: '/^docs(\([^)]*\))?:/'
   - label: test
-    title: '/^test(\([^)]*\))?!?:/'
+    title: '/^test(\([^)]*\))?:/'
   - label: refactor
-    title: '/^refactor(\([^)]*\))?!?:/'
+    title: '/^refactor(\([^)]*\))?:/'
   - label: chore
-    title: '/^chore(\([^)]*\))?!?:/'
+    title: '/^chore(\([^)]*\))?:/'

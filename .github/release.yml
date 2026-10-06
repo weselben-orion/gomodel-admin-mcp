@@ -7,6 +7,9 @@
 # stay in sync.
 #
 # Docs: https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+#
+# skip-release is applied by hand (or a future automation) to merge a PR
+# without listing it in the next release's notes.
 changelog:
   exclude:
     labels:
