@@ -123,6 +123,14 @@ jobs:
             const testChangedLines = Math.max(0, totalChangedLines - nonTestChangedLines);
 
             const changedLines = nonTestChangedLines === 0 ? testChangedLines : nonTestChangedLines;
+            const managedLabelNames = new Set([
+              "size:XS",
+              "size:S",
+              "size:M",
+              "size:L",
+              "size:XL",
+              "size:XXL",
+            ]);
             const nextLabelName = resolveSizeLabel(changedLines);
 
             const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({
@@ -133,7 +141,7 @@ jobs:
             });
 
             for (const label of currentLabels) {
-              if (!label.name.startsWith("size:") || label.name === nextLabelName) {
+              if (!managedLabelNames.has(label.name) || label.name === nextLabelName) {
                 continue;
               }
               try {
