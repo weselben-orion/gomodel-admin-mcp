@@ -379,3 +379,5 @@ export function registerDocsTools(server: McpServer): number {
   }
   return tools.length;
 }
+
+// second CI-label verification pass.
