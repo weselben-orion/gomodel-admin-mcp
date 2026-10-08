@@ -13,7 +13,8 @@ export interface ToolGroup {
   description: string;
   /** Operation name → one-line hint, in registration order. */
   operations: Record<string, string>;
-  kind: "read" | "write";
+  /** "playground" groups run through a custom executor in index.ts. */
+  kind: "read" | "write" | "playground";
 }
 
 function ops(entries: [string, string][]): Record<string, string> {
