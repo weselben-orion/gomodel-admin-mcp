@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { assembleStream } from "./playground-sse.js";
 
 /**
  * Playground tools: the MCP equivalent of the dashboard Playground page
@@ -307,112 +308,6 @@ function validateRoles(
     }
   }
   return undefined;
-}
-
-/* ---------------------------- SSE assembly ---------------------------- */
-
-/**
- * Assemble an SSE stream into the non-streaming shape, like the dashboard
- * Playground's JSON panel. Best effort per dialect: chat completions deltas,
- * Anthropic content blocks, Responses API response.completed events.
- */
-function assembleStream(endpoint: string, sse: string): unknown {
-  const dataLines = sse
-    .split("\n")
-    .filter((line) => line.startsWith("data:"))
-    .map((line) => line.slice(5).trim());
-  const frames: Record<string, unknown>[] = [];
-  for (const line of dataLines) {
-    if (!line || line === "[DONE]") continue;
-    try {
-      frames.push(JSON.parse(line) as Record<string, unknown>);
-    } catch {
-      // ignore malformed frames
-    }
-  }
-
-  if (endpoint === "chat_completions") {
-    let content = "";
-    let usage: unknown;
-    let id: unknown;
-    let model: unknown;
-    let finishReason: unknown = "stop";
-    for (const frame of frames) {
-      id = id ?? frame.id;
-      model = model ?? frame.model;
-      if (frame.usage) usage = frame.usage;
-      const choices = frame.choices as Record<string, unknown>[] | undefined;
-      const choice = choices?.[0];
-      const delta = choice?.delta as Record<string, unknown> | undefined;
-      if (typeof delta?.content === "string") content += delta.content;
-      if (typeof choice?.finish_reason === "string" && choice.finish_reason) {
-        finishReason = choice.finish_reason;
-      }
-    }
-    return {
-      id,
-      object: "chat.completion",
-      model,
-      choices: [{ index: 0, message: { role: "assistant", content }, finish_reason: finishReason }],
-      usage,
-    };
-  }
-
-  if (endpoint === "messages") {
-    let text = "";
-    let usage: Record<string, unknown> = {};
-    let header: Record<string, unknown> = {};
-    for (const frame of frames) {
-      if (frame.type === "message_start") {
-        const message = frame.message as Record<string, unknown> | undefined;
-        if (message) {
-          header = message;
-          usage = (message.usage as Record<string, unknown>) ?? {};
-        }
-      } else if (frame.type === "content_block_delta") {
-        const delta = frame.delta as Record<string, unknown> | undefined;
-        if (typeof delta?.text === "string") text += delta.text;
-      } else if (frame.type === "message_delta") {
-        const deltaUsage = frame.usage as Record<string, unknown> | undefined;
-        if (deltaUsage) usage = { ...usage, ...deltaUsage };
-      }
-    }
-    return {
-      id: header.id,
-      type: "message",
-      role: "assistant",
-      model: header.model,
-      content: [{ type: "text", text }],
-      stop_reason: "end_turn",
-      usage,
-    };
-  }
-
-  // responses: prefer the terminal response.completed frame.
-  for (const frame of frames) {
-    if (frame.type === "response.completed") {
-      const response = frame.response as Record<string, unknown> | undefined;
-      if (response) return response;
-    }
-  }
-  let text = "";
-  let id: unknown;
-  let model: unknown;
-  for (const frame of frames) {
-    id = id ?? frame.id;
-    model = model ?? frame.model;
-    if (frame.type === "response.output_text.delta" && typeof frame.delta === "string") {
-      text += frame.delta;
-    }
-  }
-  return {
-    id,
-    object: "response",
-    model,
-    output: [
-      { type: "message", role: "assistant", content: [{ type: "output_text", text }] },
-    ],
-  };
 }
 
 /* ------------------------------ send ---------------------------------- */
