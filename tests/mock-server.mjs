@@ -75,6 +75,34 @@ function faultFor(method, path) {
   return null;
 }
 
+/**
+ * Same grammar as MOCK_FAULT but scoped to the public /v1 routes (which
+ * faultFor's admin-route matcher does not see). Used by playground tests to
+ * exercise non-2xx public-API responses.
+ */
+function publicFaultFor(method, path) {
+  const faults = process.env.MOCK_PUBLIC_FAULT ?? "";
+  for (const entry of faults.split(",").map((e) => e.trim()).filter(Boolean)) {
+    const match = entry.match(/^(\S+)\s+(\S+)=(\d{3})$/);
+    if (!match) continue;
+    if (match[1] === method && match[2] === path) {
+      const code = Number(match[3]);
+      return {
+        status: code,
+        body: {
+          error: {
+            type: "invalid_request_error",
+            message: `fault injection on ${method} ${path}`,
+            param: null,
+            code: null,
+          },
+        },
+      };
+    }
+  }
+  return null;
+}
+
 /* ------------------------------------------------------------------ */
 /* Route table: spec paths + hand-added endpoints                      */
 /* ------------------------------------------------------------------ */
@@ -339,6 +367,11 @@ export function createMockServer() {
     // middleware would), then answer with a dialect-shaped completion.
     const publicRoute = PUBLIC_ROUTES.find((r) => r.method === method && r.path === pathname);
     if (publicRoute) {
+      // Public-API fault injection: short-circuit before recording the audit
+      // entry, since a real gateway does not audit failed upstream calls.
+      const publicFault = publicFaultFor(method, pathname);
+      if (publicFault) return send(publicFault.status, publicFault.body);
+
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       let body = {};

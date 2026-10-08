@@ -54,7 +54,8 @@ describe("playground gating", () => {
       const tools = await mcp.listTools();
       expect(tools.map((t) => t.name)).toContain("admin_playground");
 
-      // send is refused in read-only mode.
+      // send is refused in read-only mode — surfaced through MCP's
+      // isError channel (not as a JSON payload with error:).
       const send = await mcp.call("admin_playground", {
         operation: "send",
         params: {
@@ -63,9 +64,8 @@ describe("playground gating", () => {
           messages: [{ role: "user", content: "hi" }],
         },
       });
-      expect(send.isError).toBe(false);
-      const sendPayload = JSON.parse(send.text);
-      expect(sendPayload.error).toMatch(/GOMODEL_READ_ONLY/);
+      expect(send.isError).toBe(true);
+      expect(send.text).toMatch(/GOMODEL_READ_ONLY/);
       // Nothing reached the public API.
       expect(mock.requests.has("POST /v1/chat/completions")).toBe(false);
 
@@ -189,10 +189,10 @@ describe("playground dispatch", () => {
         headers: { Authorization: "Bearer sk_evil" },
       },
     });
-    expect(result.isError).toBe(false);
-    const payload = JSON.parse(result.text);
-    expect(payload.error).toContain("headers.Authorization");
-    expect(payload.error).toContain("rejected");
+    // Rejected headers go through MCP's isError channel, not a JSON payload.
+    expect(result.isError).toBe(true);
+    expect(result.text).toContain("headers.Authorization");
+    expect(result.text).toContain("rejected");
     // The secret never echoes and no request left the building.
     expect(result.text).not.toContain("sk_evil");
     expect(mock.requests.has("POST /v1/chat/completions")).toBe(false);
@@ -208,9 +208,8 @@ describe("playground dispatch", () => {
         headers: { "X-Api-Key": "sk_evil" },
       },
     });
-    expect(result.isError).toBe(false);
-    const payload = JSON.parse(result.text);
-    expect(payload.error).toContain("headers.X-Api-Key");
+    expect(result.isError).toBe(true);
+    expect(result.text).toContain("headers.X-Api-Key");
     expect(mock.requests.has("POST /v1/messages")).toBe(false);
   });
 
@@ -224,10 +223,9 @@ describe("playground dispatch", () => {
         headers: { "X-GoModel-User-Path": "/acme" },
       },
     });
-    expect(result.isError).toBe(false);
-    const payload = JSON.parse(result.text);
-    expect(payload.error).toContain("headers.X-GoModel-User-Path");
-    expect(payload.error).toContain("user_path");
+    expect(result.isError).toBe(true);
+    expect(result.text).toContain("headers.X-GoModel-User-Path");
+    expect(result.text).toContain("user_path");
     expect(mock.requests.has("POST /v1/chat/completions")).toBe(false);
   });
 
@@ -427,6 +425,170 @@ describe("playground user-path auto-resolve and fallbacks", () => {
       expect(payload.source).toBe("direct");
       expect(payload.warning).toContain("audit entry");
       expect(payload.response.choices[0].message.content).toContain("miss-model");
+    } finally {
+      delete process.env.MOCK_PLAYGROUND_AUDIT_MISS;
+      await mcp.close();
+      await mock.close();
+    }
+  });
+});
+
+describe("playground responses dialect", () => {
+  let mock: Awaited<ReturnType<typeof startMock>>;
+  let mcp: Awaited<ReturnType<typeof startMcp>>;
+
+  beforeAll(async () => {
+    mock = await startMock();
+    mcp = await startMcp({ GOMODEL_BASE_URL: mock.url, GOMODEL_PLAYGROUND: "1" });
+  });
+
+  afterAll(async () => {
+    await mcp.close();
+    await mock.close();
+  });
+
+  test("maps messages -> input and max_tokens -> max_output_tokens on /v1/responses", async () => {
+    const result = await mcp.call("admin_playground", {
+      operation: "send",
+      params: {
+        endpoint: "responses",
+        model: "demo-model",
+        messages: [{ role: "system", content: "be terse" }, { role: "user", content: "hi" }],
+        max_tokens: 64,
+      },
+    });
+    expect(result.isError).toBe(false);
+    const sent = mock.requestBodies.findLast(
+      (entry) => entry.method === "POST" && entry.path === "/v1/responses",
+    );
+    expect(sent).toBeDefined();
+    expect(sent!.body).toMatchObject({
+      model: "demo-model",
+      input: [
+        { role: "system", content: "be terse" },
+        { role: "user", content: "hi" },
+      ],
+      max_output_tokens: 64,
+    });
+    // `messages` and `max_tokens` must NOT appear on the responses wire.
+    expect(sent!.body.messages).toBeUndefined();
+    expect(sent!.body.max_tokens).toBeUndefined();
+  });
+
+  test("audit reassembly roundtrips a responses-shaped audit entry", async () => {
+    const result = await mcp.call("admin_playground", {
+      operation: "send",
+      params: {
+        endpoint: "responses",
+        model: "demo-model",
+        messages: [{ role: "user", content: "hi" }],
+      },
+    });
+    expect(result.isError).toBe(false);
+    const payload = JSON.parse(result.text);
+    expect(payload.source).toBe("audit");
+    // The mock records an Anthropic-shaped response for /v1/messages and a
+    // chat-completions-shaped one otherwise; the responses dialect should
+    // surface whatever the gateway logged.
+    expect(payload.response_body).toBeDefined();
+    expect(payload.status).toBe(200);
+  });
+
+  test("rejects the 'tool' role on the responses dialect with the allowed list", async () => {
+    const before = mock.requests.get("POST /v1/responses") ?? 0;
+    const result = await mcp.call("admin_playground", {
+      operation: "send",
+      params: {
+        endpoint: "responses",
+        model: "demo-model",
+        messages: [{ role: "tool", content: "raw output" }],
+      },
+    });
+    expect(result.isError).toBe(true);
+    expect(result.text).toContain("messages.0.role");
+    expect(result.text).toContain("system, developer, user, assistant");
+    // Schema-level validation rejects the call before any HTTP request.
+    expect(mock.requests.get("POST /v1/responses") ?? 0).toBe(before);
+  });
+
+  test("the chat_completions and messages endpoints still allow tool/function roles", async () => {
+    const before = mock.requests.get("POST /v1/chat/completions") ?? 0;
+    const result = await mcp.call("admin_playground", {
+      operation: "send",
+      params: {
+        endpoint: "chat_completions",
+        model: "demo-model",
+        messages: [{ role: "tool", content: "raw output" }],
+      },
+    });
+    // chat_completions allows tool; the call succeeds and reaches the wire.
+    expect(result.isError).toBe(false);
+    expect(mock.requests.get("POST /v1/chat/completions") ?? 0).toBe(before + 1);
+  });
+});
+
+describe("playground error-channel routing", () => {
+  test("non-2xx public-API response is surfaced through isError, not as a JSON error field", async () => {
+    process.env.MOCK_PUBLIC_FAULT = "POST /v1/chat/completions=400";
+    const mock = await startMock();
+    const mcp = await startMcp({ GOMODEL_BASE_URL: mock.url, GOMODEL_PLAYGROUND: "1" });
+    try {
+      const result = await mcp.call("admin_playground", {
+        operation: "send",
+        params: {
+          endpoint: "chat_completions",
+          model: "demo-model",
+          messages: [{ role: "user", content: "hi" }],
+        },
+      });
+      expect(result.isError).toBe(true);
+      expect(result.text).toContain("public API 400");
+      expect(result.text).toContain("invalid_request_error");
+    } finally {
+      delete process.env.MOCK_PUBLIC_FAULT;
+      await mcp.close();
+      await mock.close();
+    }
+  });
+
+  test("role validation on chat_completions is surfaced through isError", async () => {
+    const mock = await startMock();
+    const mcp = await startMcp({ GOMODEL_BASE_URL: mock.url, GOMODEL_PLAYGROUND: "1" });
+    try {
+      const result = await mcp.call("admin_playground", {
+        operation: "send",
+        params: {
+          endpoint: "chat_completions",
+          model: "demo-model",
+          messages: [{ role: "bogus", content: "hi" }],
+        },
+      });
+      expect(result.isError).toBe(true);
+      expect(result.text).toContain("messages.0.role");
+      expect(mock.requests.has("POST /v1/chat/completions")).toBe(false);
+    } finally {
+      await mcp.close();
+      await mock.close();
+    }
+  });
+
+  test("audit-reassembly fallbacks stay successful with source:direct (not isError)", async () => {
+    process.env.MOCK_PLAYGROUND_AUDIT_MISS = "1";
+    const mock = await startMock();
+    const mcp = await startMcp({ GOMODEL_BASE_URL: mock.url, GOMODEL_PLAYGROUND: "1" });
+    try {
+      const result = await mcp.call("admin_playground", {
+        operation: "send",
+        params: {
+          endpoint: "chat_completions",
+          model: "demo-model",
+          messages: [{ role: "user", content: "hi" }],
+        },
+      });
+      expect(result.isError).toBe(false);
+      const payload = JSON.parse(result.text);
+      expect(payload.source).toBe("direct");
+      expect(payload.warning).toBeDefined();
     } finally {
       delete process.env.MOCK_PLAYGROUND_AUDIT_MISS;
       await mcp.close();

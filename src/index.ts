@@ -517,7 +517,8 @@ function buildServer(): McpServer {
             readOnly: READ_ONLY,
           };
           const text = await runPlaygroundOp(result.operation, result.params, deps, result.bypass);
-          return textResult(normalizeOutput(text));
+          if (text.kind === "error") return errorResult(text.text);
+          return textResult(normalizeOutput(text.text));
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           return errorResult(`Error: ${message}`);
