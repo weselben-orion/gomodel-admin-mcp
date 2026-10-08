@@ -31,7 +31,7 @@ import { assembleStream } from "./playground-sse.js";
  *   request_headers/response_headers, *_body_too_big_to_handle flags)
  */
 
-import type { ToolGroup } from "./groups.js";
+import { operationListing, type ToolGroup } from "./groups.js";
 
 /* ------------------------------------------------------------------ */
 /* Credential headers                                                   */
@@ -199,17 +199,12 @@ export type PlaygroundDispatch =
 
 export function playgroundDispatch(args: Record<string, unknown>): PlaygroundDispatch {
   const operation = typeof args.operation === "string" ? args.operation : "";
+  const listing = operationListing(PLAYGROUND_GROUP);
   if (!operation) {
-    return {
-      kind: "text",
-      text: "Operations of admin_playground:\n- context: model picker context: user-path header name, models, virtual models with user_paths policies\n- send: send one inference request via /v1/chat/completions, /v1/responses, or /v1/messages and reassemble the audit entry",
-    };
+    return { kind: "text", text: listing };
   }
   if (operation !== "context" && operation !== "send") {
-    return {
-      kind: "error",
-      text: `unknown operation "${operation}" for admin_playground.\n\nOperations of admin_playground:\n- context: model picker context: user-path header name, models, virtual models with user_paths policies\n- send: send one inference request via /v1/chat/completions, /v1/responses, or /v1/messages and reassemble the audit entry`,
-    };
+    return { kind: "error", text: `unknown operation "${operation}" for admin_playground.\n\n${listing}` };
   }
   const raw = (args.params ?? {}) as Record<string, unknown>;
   const bypass = raw.cache_bypass === true;
