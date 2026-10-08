@@ -496,15 +496,29 @@ async function readUserPathHeaderName(deps: PlaygroundDeps): Promise<string> {
   return DEFAULT_USER_PATH_HEADER;
 }
 
+/**
+ * Run a playground send. Validation failures (read-only, rejected headers,
+ * rejected roles, non-2xx upstream) return `{kind: "error", text}` so the
+ * caller can surface them through MCP's `isError` channel. Audit-reassembly
+ * fallbacks (`source: "direct"` with a warning) keep `kind: "text"` — they
+ * are documented behavior, not user errors.
+ */
+export type SendRunResult = { kind: "text"; text: string } | { kind: "error"; text: string };
+
+function sendError(message: string): SendRunResult {
+  // Match the wording of the dispatch-layer error path so callers that
+  // already key off "invalid params for ..." keep working.
+  return { kind: "error", text: `Error: ${message}` };
+}
+
 async function executeSend(
   deps: PlaygroundDeps,
   params: Record<string, unknown>,
-): Promise<string> {
+): Promise<SendRunResult> {
   if (deps.readOnly) {
-    return JSON.stringify({
-      error:
-        "send is disabled: this MCP server runs with GOMODEL_READ_ONLY=1 — playground inference requests are writes and are gated off",
-    });
+    return sendError(
+      "send is disabled: this MCP server runs with GOMODEL_READ_ONLY=1 — playground inference requests are writes and are gated off",
+    );
   }
 
   const endpoint = params.endpoint as string;
@@ -516,16 +530,16 @@ async function executeSend(
   const userPathHeader = await readUserPathHeaderName(deps);
   const headerError = validateHeaderNames(customHeaders, userPathHeader);
   if (headerError) {
-    return JSON.stringify({
-      error: `invalid params for send:\n${headerError}\n\nCall admin_playground again with corrected params; omit "operation" to re-list this area's operations.`,
-    });
+    return sendError(
+      `invalid params for send:\n${headerError}\n\nCall admin_playground again with corrected params; omit "operation" to re-list this area's operations.`,
+    );
   }
 
   const roleError = validateRoles(endpoint, messages);
   if (roleError) {
-    return JSON.stringify({
-      error: `invalid params for send:\n${roleError}\n\nCall admin_playground again with corrected params; omit "operation" to re-list this area's operations.`,
-    });
+    return sendError(
+      `invalid params for send:\n${roleError}\n\nCall admin_playground again with corrected params; omit "operation" to re-list this area's operations.`,
+    );
   }
 
   // User path: explicit param wins; otherwise auto-send the FIRST entry of the
@@ -574,7 +588,7 @@ async function executeSend(
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return JSON.stringify({ error: `public API request failed: ${message}` });
+    return sendError(`public API request failed: ${message}`);
   }
   const latencyMs = Date.now() - startMs;
 
@@ -591,22 +605,28 @@ async function executeSend(
     }
   }
   if (!res.ok) {
-    return JSON.stringify({
-      error: `public API ${res.status} ${res.statusText}: ${JSON.stringify(directBody).slice(0, 2000)}`,
-    });
+    return sendError(
+      `public API ${res.status} ${res.statusText}: ${JSON.stringify(directBody).slice(0, 2000)}`,
+    );
   }
 
   // Audit reassembly: find THIS request's entry, then fetch its detail.
+  // All three fallback branches below are documented behavior (entry not
+  // found, detail fetch fails, LOGGING_LOG_BODIES=false), not user errors —
+  // they keep `kind: "text"` and surface `source: "direct"` with a warning.
   const found = await findAuditEntry(deps, model, path, startedAt);
   if (found.missing || !found.id) {
-    return JSON.stringify({
-      source: "direct",
-      warning:
-        "audit entry for this request not found within the lookup window — returned the direct API response instead",
-      status: res.status,
-      latency_ms: latencyMs,
-      response: directBody,
-    });
+    return {
+      kind: "text",
+      text: JSON.stringify({
+        source: "direct",
+        warning:
+          "audit entry for this request not found within the lookup window — returned the direct API response instead",
+        status: res.status,
+        latency_ms: latencyMs,
+        response: directBody,
+      }),
+    };
   }
 
   let detail: Record<string, unknown>;
@@ -614,13 +634,16 @@ async function executeSend(
     const detailText = await deps.readAdmin("get_audit_detail", { log_id: found.id }, true);
     detail = JSON.parse(detailText) as Record<string, unknown>;
   } catch {
-    return JSON.stringify({
-      source: "direct",
-      warning: `audit detail for entry ${found.id} could not be fetched — returned the direct API response instead`,
-      status: res.status,
-      latency_ms: latencyMs,
-      response: directBody,
-    });
+    return {
+      kind: "text",
+      text: JSON.stringify({
+        source: "direct",
+        warning: `audit detail for entry ${found.id} could not be fetched — returned the direct API response instead`,
+        status: res.status,
+        latency_ms: latencyMs,
+        response: directBody,
+      }),
+    };
   }
 
   const data = (detail.data ?? {}) as Record<string, unknown>;
@@ -630,28 +653,31 @@ async function executeSend(
   if (!hasBodies && !bodiesTooBig) {
     // LOGGING_LOG_BODIES=false on the gateway: bodies never reach the audit
     // trail, so the audit panel view is impossible — return the direct response.
-    return JSON.stringify({
-      source: "direct",
-      audit_id: detail.id,
-      warning:
-        "request/response bodies are absent from the audit entry — enable LOGGING_LOG_BODIES=true on the gateway to get the full audit reassembly; returned the direct API response instead",
-      status: detail.status_code ?? res.status,
-      latency_ms:
-        typeof detail.duration_ns === "number" ? detail.duration_ns / 1_000_000 : latencyMs,
-      usage: detail.usage,
-      response: directBody,
-    });
+    return {
+      kind: "text",
+      text: JSON.stringify({
+        source: "direct",
+        audit_id: detail.id,
+        warning:
+          "request/response bodies are absent from the audit entry — enable LOGGING_LOG_BODIES=true on the gateway to get the full audit reassembly; returned the direct API response instead",
+        status: detail.status_code ?? res.status,
+        latency_ms:
+          typeof detail.duration_ns === "number" ? detail.duration_ns / 1_000_000 : latencyMs,
+        usage: detail.usage,
+        response: directBody,
+      }),
+    };
   }
 
   const snapshot = pickAuditSnapshot(detail);
   if (autoResolved) snapshot.user_path = userPath;
-  return JSON.stringify(snapshot);
+  return { kind: "text", text: JSON.stringify(snapshot) };
 }
 
 async function executeContext(
   deps: PlaygroundDeps,
   bypass: boolean,
-): Promise<string> {
+): Promise<SendRunResult> {
   const [configText, modelsText, virtualText] = await Promise.all([
     deps.readAdmin("get_runtime_config", {}, bypass),
     deps.readAdmin("list_models", {}, bypass),
@@ -688,20 +714,31 @@ async function executeContext(
     }));
 
   const headerName = config.USER_PATH_HEADER;
-  return JSON.stringify({
-    user_path_header:
-      typeof headerName === "string" && headerName.trim() ? headerName.trim() : DEFAULT_USER_PATH_HEADER,
-    models: compactModels,
-    virtual_models: compactVirtual,
-  });
+  return {
+    kind: "text",
+    text: JSON.stringify({
+      user_path_header:
+        typeof headerName === "string" && headerName.trim()
+          ? headerName.trim()
+          : DEFAULT_USER_PATH_HEADER,
+      models: compactModels,
+      virtual_models: compactVirtual,
+    }),
+  };
 }
 
+/**
+ * Run a playground operation. Returns a discriminated union the caller routes
+ * to MCP `isError`/text content based on `kind`. Context is always text;
+ * send surfaces read-only refusals, credential/user-path-header rejections,
+ * role validation, and non-2xx upstream responses as `kind: "error"`.
+ */
 export async function runPlaygroundOp(
   operation: "context" | "send",
   params: Record<string, unknown>,
   deps: PlaygroundDeps,
   bypass: boolean,
-): Promise<string> {
+): Promise<SendRunResult> {
   if (operation === "context") return executeContext(deps, bypass);
   return executeSend(deps, params);
 }
