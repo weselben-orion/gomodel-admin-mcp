@@ -13,7 +13,13 @@ import { EXTRA_WRITE_TOOLS } from "./extra-write-tools.js";
 import { registerDocsTools } from "./docs.js";
 import { MAX_BYTES, normalizeOutput, truncate } from "./output.js";
 import { envInt } from "./env.js";
-import { READ_GROUPS, WRITE_GROUPS, resolveOperation, type ToolGroup } from "./groups.js";
+import {
+  READ_GROUPS,
+  WRITE_GROUPS,
+  resolveOperation,
+  operationListing,
+  type ToolGroup,
+} from "./groups.js";
 import {
   PLAYGROUND_GROUP,
   playgroundDispatch,
@@ -293,11 +299,6 @@ async function adminWrite(tool: WriteTool, args: Record<string, unknown>): Promi
 /* ------------------------------------------------------------------ */
 /* Group tools: gradual discovery, harness-agnostic.                   */
 /* ------------------------------------------------------------------ */
-
-function operationListing(group: ToolGroup): string {
-  const lines = Object.entries(group.operations).map(([op, hint]) => `- ${op}: ${hint}`);
-  return `Operations of admin_${group.name}:\n${lines.join("\n")}`;
-}
 
 const RECEIVED_PREVIEW_CHARS = 200;
 

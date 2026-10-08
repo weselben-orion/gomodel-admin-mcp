@@ -245,3 +245,14 @@ export function resolveOperation(
   if (!Object.prototype.hasOwnProperty.call(group.operations, operation)) return undefined;
   return pool.get(operation);
 }
+
+/**
+ * Render a group's operations as the multi-line listing the MCP tools
+ * surface when the caller omits `operation` (or names one that does not
+ * exist). Shared by both the regular group dispatcher and the playground
+ * dispatcher so the wording stays in lockstep with PLAYGROUND_GROUP.operations.
+ */
+export function operationListing(group: ToolGroup): string {
+  const lines = Object.entries(group.operations).map(([op, hint]) => `- ${op}: ${hint}`);
+  return `Operations of admin_${group.name}:\n${lines.join("\n")}`;
+}
