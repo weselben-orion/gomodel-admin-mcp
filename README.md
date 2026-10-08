@@ -135,6 +135,12 @@ Behavior details:
   the UI does.
 - `send` respects `GOMODEL_READ_ONLY`: on a read-only server it refuses;
   `context` still works.
+- Concurrent same-model `send` calls are not safe: the audit reassembly
+  filters by `model` + `path` within a ~1-second window and takes the first
+  match. Two concurrent `send` calls with the same model and endpoint can
+  each reassemble the other call's bodies. Serialize concurrent calls, or
+  use distinct models per concurrent call, until per-request correlation
+  is added.
 
 ## Modes and passive token cost
 
