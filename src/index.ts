@@ -118,11 +118,21 @@ function buildUrl(tool: AdminTool, args: Record<string, unknown>): string {
  * JSON is homogenized and truncated before the result is cached; non-success
  * responses throw with a bounded response excerpt.
  */
-async function adminGet(tool: AdminTool, args: Record<string, unknown>, bypass: boolean): Promise<string> {
+/**
+ * One lookup/fetch path for admin reads, shared by both callers below.
+ * Returns the stored text plus whether THIS call was served from cache, so
+ * the presentation layer can annotate without the data layer carrying
+ * display formatting. Cache-bypassed calls still refresh the cache.
+ */
+async function adminLoad(
+  tool: AdminTool,
+  args: Record<string, unknown>,
+  bypass: boolean,
+): Promise<{ text: string; cacheHit: boolean }> {
   const url = buildUrl(tool, args);
   if (!bypass) {
     const cached = cacheGet(url);
-    if (cached !== undefined) return `${cached}\n\n[cache hit: ${CACHE_TTL_SECONDS}s TTL]`;
+    if (cached !== undefined) return { text: cached, cacheHit: true };
   }
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${API_KEY}`, Accept: "application/json" },
@@ -135,7 +145,30 @@ async function adminGet(tool: AdminTool, args: Record<string, unknown>, bypass: 
   // Homogenize before truncate so the cached text is the emitted text.
   const text = normalizeOutput(body);
   cacheSet(url, text);
-  return text;
+  return { text, cacheHit: false };
+}
+
+/**
+ * Machine-consumed read: returns the stored text verbatim, no display
+ * annotations. The playground deps parse this as JSON — any presentation
+ * suffix here becomes a parse failure within the cache TTL.
+ */
+function adminGetRaw(
+  tool: AdminTool,
+  args: Record<string, unknown>,
+  bypass: boolean,
+): Promise<string> {
+  return adminLoad(tool, args, bypass).then(({ text }) => text);
+}
+
+/** Display-consumed read: appends the cache-hit annotation for tool output. */
+async function adminGet(
+  tool: AdminTool,
+  args: Record<string, unknown>,
+  bypass: boolean,
+): Promise<string> {
+  const { text, cacheHit } = await adminLoad(tool, args, bypass);
+  return cacheHit ? `${text}\n\n[cache hit: ${CACHE_TTL_SECONDS}s TTL]` : text;
 }
 
 /**
@@ -511,7 +544,7 @@ function buildServer(): McpServer {
             readAdmin: (toolName: string, opArgs: Record<string, unknown>, bypass: boolean) => {
               const tool = READ_MAP.get(toolName);
               if (!tool) throw new Error(`unknown admin read: ${toolName}`);
-              return adminGet(tool, opArgs, bypass);
+              return adminGetRaw(tool, opArgs, bypass);
             },
             baseUrl: BASE_URL,
             apiKey: API_KEY,

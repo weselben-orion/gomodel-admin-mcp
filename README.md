@@ -127,10 +127,11 @@ Behavior details:
 - Header rules: credential headers (`authorization`, `proxy-authorization`,
   `cookie`, `set-cookie`, `x-api-key`, `api-key`, `x-goog-api-key`,
   `x-auth-token`, `x-access-token`, `x-gomodel-key` — the gateway's
-  `internal/core/credential_headers.go` list, matched case-insensitively)
-  and the configured user-path header are rejected with field-level errors.
-  `Authorization` is always set by the tool from its configured key;
-  `Content-Type` is forced per dialect.
+  `internal/core/credential_headers.go` list, matched case-insensitively),
+  the configured user-path header, and caller-supplied `content-type` are
+  rejected with field-level errors. `Authorization` is always set by the
+  tool from its configured key; `Content-Type` is forced per dialect
+  (`application/json` on all three).
 - `stream: true` assembles the SSE stream into the non-streaming shape, like
   the UI does.
 - `send` respects `GOMODEL_READ_ONLY`: on a read-only server it refuses;

@@ -253,6 +253,9 @@ function validateHeaderNames(
     if (name.trim().toLowerCase() === userPathHeader.trim().toLowerCase()) {
       return `- headers.${name}: user-path header rejected — pass the user path via the user_path parameter instead; the user path is only settable through that param, never through headers`;
     }
+    if (name.trim().toLowerCase() === "content-type") {
+      return `- headers.${name}: content-type header rejected — Content-Type is forced per dialect (application/json); custom values cannot be forwarded`;
+    }
   }
   return undefined;
 }
@@ -436,12 +439,13 @@ async function executeSend(
     temperature: params.temperature as number | undefined,
   });
 
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${deps.apiKey}`, // always set by the tool, never caller-supplied
-    "Content-Type": contentTypeFor(),
-    ...customHeaders,
-  };
-  if (userPath !== undefined) headers[userPathHeader] = userPath;
+  // Headers built case-insensitively: caller values first, then the tool's
+  // forced headers via Headers.set, which replaces any case variant the
+  // object spread would have kept as a separate key.
+  const wireHeaders = new Headers(customHeaders);
+  wireHeaders.set("Authorization", `Bearer ${deps.apiKey}`); // always set by the tool, never caller-supplied
+  wireHeaders.set("Content-Type", contentTypeFor());
+  if (userPath !== undefined) wireHeaders.set(userPathHeader, userPath);
 
   const startedAt = new Date();
   const startMs = Date.now();
@@ -449,7 +453,7 @@ async function executeSend(
   try {
     res = await fetch(`${deps.baseUrl}${path}`, {
       method: "POST",
-      headers,
+      headers: wireHeaders,
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(120_000),
     });

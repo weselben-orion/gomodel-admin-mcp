@@ -154,6 +154,56 @@ describe("playground dispatch", () => {
     expect(result.text).toContain("required");
   });
 
+  test("cached reads stay parseable: second context call within the TTL succeeds", async () => {
+    // The first context call warms the runtime-config/models/virtual-models
+    // cache; the second must parse the stored text, not a display-suffixed
+    // variant. Before the adminGetRaw split this threw inside executeContext.
+    const configReadsBefore = mock.requests.get("GET /admin/runtime/config") ?? 0;
+    const result = await mcp.call("admin_playground", { operation: "context" });
+    expect(result.isError).toBe(false);
+    const payload = JSON.parse(result.text); // would throw on the old suffix
+    expect(payload.user_path_header).toBe("X-GoModel-User-Path");
+    // Prove the second read was actually served from cache.
+    expect(mock.requests.get("GET /admin/runtime/config") ?? 0).toBe(configReadsBefore);
+  });
+
+  test("cached reads keep a non-default user-path header name visible", async () => {
+    // Same TTL window as the previous test: the runtime-config entry is
+    // cached. readUserPathHeaderName must still resolve the configured name
+    // from the cached text instead of silently falling back to the default.
+    const result = await mcp.call("admin_playground", {
+      operation: "send",
+      params: {
+        endpoint: "chat_completions",
+        model: "demo-model",
+        messages: [{ role: "user", content: "hi" }],
+        headers: { "X-GoModel-User-Path": "smuggled" },
+      },
+    });
+    // Rejection uses the LIVE (cached) name, not the fallback default.
+    expect(result.isError).toBe(true);
+    expect(result.text).toContain("headers.X-GoModel-User-Path");
+    expect(mock.requests.has("POST /v1/chat/completions")).toBe(false);
+  });
+
+  test("caller-supplied content-type is rejected with a field-level error", async () => {
+    for (const name of ["content-type", "Content-Type", "CONTENT-TYPE", "  content-type "]) {
+      const result = await mcp.call("admin_playground", {
+        operation: "send",
+        params: {
+          endpoint: "chat_completions",
+          model: "demo-model",
+          messages: [{ role: "user", content: "hi" }],
+          headers: { [name]: "text/plain" },
+        },
+      });
+      expect(result.isError).toBe(true);
+      expect(result.text).toContain("content-type header rejected");
+      expect(result.text).not.toContain("text/plain");
+      expect(mock.requests.has("POST /v1/chat/completions")).toBe(false);
+    }
+  });
+
   test("every credential header is rejected with a field-level error", () => {
     // Ported list — internal/core/credential_headers.go (10 names).
     const headers = [
