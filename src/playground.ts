@@ -288,23 +288,6 @@ function buildRequestBody(args: {
   return body;
 }
 
-function validateRoles(
-  endpoint: string,
-  messages: { role: string; content: unknown }[] | undefined,
-): string | undefined {
-  if (endpoint !== "responses" && (!messages || messages.length === 0)) {
-    return `- messages: required for ${endpoint} (at least one message)`;
-  }
-  if (!messages) return undefined;
-  const allowed = new Set(allowedRoles(endpoint));
-  for (const [i, message] of messages.entries()) {
-    if (!allowed.has(message.role)) {
-      return `- messages.${i}.role: invalid_type — role must be one of: ${[...allowed].join(", ")}`;
-    }
-  }
-  return undefined;
-}
-
 /* ------------------------------ send ---------------------------------- */
 
 function firstUserPathPolicy(
@@ -425,12 +408,6 @@ async function executeSend(
     );
   }
 
-  const roleError = validateRoles(endpoint, messages);
-  if (roleError) {
-    return sendError(
-      `invalid params for send:\n${roleError}\n\nCall admin_playground again with corrected params; omit "operation" to re-list this area's operations.`,
-    );
-  }
 
   // User path: explicit param wins; otherwise auto-send the FIRST entry of the
   // model's user_paths policy, mirroring the UI prefill.
