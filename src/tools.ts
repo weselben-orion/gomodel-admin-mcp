@@ -35,6 +35,7 @@ const timeRange: QueryParam[] = [
 const usageFilters: QueryParam[] = [
   ...timeRange,
   { name: "session_id", description: "Filter by exact detected session ID" },
+  { name: "auth_key_id", description: "Filter by exact managed auth key ID" },
   { name: "model", description: "Filter by model id" },
   { name: "provider", description: "Filter by provider name" },
   { name: "label", description: "Filter by request label" },
