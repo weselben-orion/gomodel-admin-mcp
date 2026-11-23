@@ -4,7 +4,7 @@
  ],
  "swagger": "2.0",
  "info": {
-  "description": "AI gateway routing requests to multiple LLM providers (OpenAI, Anthropic, Gemini, Groq, Fireworks AI, Meta, OpenRouter, Kilo AI, DeepSeek, Z.ai, xAI, MiniMax, Xiaomi MiMo, OpenCode Go, Oracle, Ollama, Bailian). Drop-in OpenAI-compatible API.",
+  "description": "AI gateway routing requests to multiple LLM providers (OpenAI, Anthropic, Gemini, Groq, Fireworks AI, Meta, OpenRouter, Kilo AI, DeepSeek, Z.ai, xAI, MiniMax, Xiaomi MiMo, Mistral AI, OpenCode Go, Oracle, Ollama, Bailian). Drop-in OpenAI-compatible API.",
   "title": "GoModel API",
   "contact": {},
   "version": "1.0"
@@ -51,11 +51,12 @@
     "tags": [
      "admin"
     ],
-    "summary": "Get the interaction session containing an audit log entry",
+    "summary": "Get the interaction session containing a request log entry",
+    "deprecated": true,
     "parameters": [
      {
       "type": "string",
-      "description": "Anchor audit log entry ID",
+      "description": "Anchor request log entry ID",
       "name": "log_id",
       "in": "query",
       "required": true
@@ -71,7 +72,7 @@
      "200": {
       "description": "OK",
       "schema": {
-       "$ref": "#/definitions/admin.auditConversationResponse"
+       "$ref": "#/definitions/admin.requestLogConversationResponse"
       }
      },
      "400": {
@@ -102,18 +103,19 @@
   },
   "/admin/audit/detail": {
    "get": {
-    "description": "Returns one audit log entry enriched with usage summary when available.",
+    "description": "Returns one request log entry enriched with usage summary when available.",
     "produces": [
      "application/json"
     ],
     "tags": [
      "admin"
     ],
-    "summary": "Get audit log entry detail",
+    "summary": "Get request log entry detail",
+    "deprecated": true,
     "parameters": [
      {
       "type": "string",
-      "description": "Audit log entry ID",
+      "description": "Request log entry ID",
       "name": "log_id",
       "in": "query",
       "required": true
@@ -123,7 +125,7 @@
      "200": {
       "description": "OK",
       "schema": {
-       "$ref": "#/definitions/admin.auditLogEntryResponse"
+       "$ref": "#/definitions/admin.requestLogEntryResponse"
       }
      },
      "400": {
@@ -166,14 +168,15 @@
   },
   "/admin/audit/log": {
    "get": {
-    "description": "Entries are slimmed for the wire: request/response bodies,\nper-attempt error bodies, and rewritten revision bodies are\nomitted (bodies_omitted=true). Fetch /admin/audit/detail for\nthe full payload of one entry.",
+    "description": "Entries are slimmed for the wire: request/response bodies,\nper-attempt error bodies, and rewritten revision bodies are\nomitted (bodies_omitted=true). Fetch /admin/request-logs/detail for\nthe full payload of one entry.",
     "produces": [
      "application/json"
     ],
     "tags": [
      "admin"
     ],
-    "summary": "Get paginated audit log entries",
+    "summary": "Get paginated request log entries",
+    "deprecated": true,
     "parameters": [
      {
       "type": "integer",
@@ -221,6 +224,24 @@
       "type": "string",
       "description": "Filter by tracked user path subtree",
       "name": "user_path",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by user paths starting with this text (case-sensitive, index-served)",
+      "name": "user_path_prefix",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by requested or resolved model starting with this text (case-sensitive, index-served)",
+      "name": "model_prefix",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact request id",
+      "name": "request_id",
       "in": "query"
      },
      {
@@ -276,7 +297,7 @@
      "200": {
       "description": "OK",
       "schema": {
-       "$ref": "#/definitions/admin.auditLogListResponse"
+       "$ref": "#/definitions/admin.requestLogListResponse"
       }
      },
      "400": {
@@ -307,14 +328,15 @@
   },
   "/admin/audit/sessions": {
    "get": {
-    "description": "Groups audit log entries by session id into threads and returns\none summary per thread — its latest matching entry and complete\nrequest count — ordered by latest activity. Entries without a session id\nappear as single-entry threads. Filters apply to entries before\ngrouping.",
+    "description": "Groups request log entries by session id into threads and returns\none summary per thread — its latest matching entry and complete\nrequest count — ordered by latest activity. Entries without a session id\nappear as single-entry threads. Filters apply to entries before\ngrouping.",
     "produces": [
      "application/json"
     ],
     "tags": [
      "admin"
     ],
-    "summary": "Get paginated audit sessions (threads)",
+    "summary": "Get paginated request log sessions (threads)",
+    "deprecated": true,
     "parameters": [
      {
       "type": "integer",
@@ -366,6 +388,30 @@
      },
      {
       "type": "string",
+      "description": "Filter by user paths starting with this text (case-sensitive, index-served)",
+      "name": "user_path_prefix",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by requested or resolved model starting with this text (case-sensitive, index-served)",
+      "name": "model_prefix",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact request id",
+      "name": "request_id",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact session id",
+      "name": "session_id",
+      "in": "query"
+     },
+     {
+      "type": "string",
       "description": "Filter by error type",
       "name": "error_type",
       "in": "query"
@@ -411,7 +457,7 @@
      "200": {
       "description": "OK",
       "schema": {
-       "$ref": "#/definitions/admin.auditSessionsListResponse"
+       "$ref": "#/definitions/admin.requestLogSessionsListResponse"
       }
      },
      "400": {
@@ -450,6 +496,7 @@
      "admin"
     ],
     "summary": "Get time-bucketed request status and latency stats",
+    "deprecated": true,
     "parameters": [
      {
       "type": "integer",
@@ -480,7 +527,7 @@
      "200": {
       "description": "OK",
       "schema": {
-       "$ref": "#/definitions/auditlog.RequestStats"
+       "$ref": "#/definitions/requestlog.RequestStats"
       }
      },
      "400": {
@@ -932,21 +979,49 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact model name",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
       "name": "model",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by provider name or provider type",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
       "name": "provider",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by request label (exact match)",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
       "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
       "in": "query"
      },
      {
@@ -956,14 +1031,22 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact managed auth key ID",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
       "name": "auth_key_id",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by tracked user path subtree",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
       "name": "user_path",
       "in": "query"
      },
@@ -1112,6 +1195,88 @@
     ]
    }
   },
+  "/admin/mcp-servers/catalog": {
+   "get": {
+    "description": "Lists every tool the MCP servers report, one row per tool with its server, for security reviews and audits. name is the name that reaches the tool on the aggregated endpoint (/mcp, or /mcp/{virtual_server} with virtual_server) and upstream_name the server's own name for the tool, which /mcp/{server} serves. exposed is false for a tool the server's allowed_tools / disallowed_tools hide. shadowed_by names the server that owns the tool's /mcp name when two servers produce the same one: the gateway keeps the first in slug order, so that name reaches the other server's tool, and this one stays callable only on /mcp/{server}. name is empty for a tool that is not exposed or is shadowed. read_only and destructive are true only when the upstream set the hint. Each row repeats its server's transport, enabled flag, status, and user-path scope. virtual_server and user_path describe the endpoint: they narrow the servers, combine, and decide name ownership among the servers left; without them ownership is decided across all servers. An empty user_path does not filter. server only keeps that server's rows. The export reads the catalogs the gateway already holds: a disabled server, or one that never connected, is listed under servers with its status and no tools, and a degraded server that connected before keeps its last catalog and its tools. In CSV, a server without tools is one row with empty tool columns, and user paths are separated by line breaks.",
+    "produces": [
+     "application/json",
+     "text/csv"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Export every MCP tool across all servers",
+    "parameters": [
+     {
+      "type": "string",
+      "description": "Export format: json (default) or csv (as an attachment)",
+      "name": "format",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Keep the rows of one MCP server, by slug",
+      "name": "server",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Keep the members of one virtual MCP server",
+      "name": "virtual_server",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Keep the servers a caller with this user path can see, e.g. /team/x",
+      "name": "user_path",
+      "in": "query"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/mcpgateway.ToolCatalog"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "403": {
+      "description": "Forbidden",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "404": {
+      "description": "Not Found",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "503": {
+      "description": "Service Unavailable",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
   "/admin/mcp-servers/{name}": {
    "delete": {
     "produces": [
@@ -1224,6 +1389,137 @@
     ]
    }
   },
+  "/admin/mcp-servers/{name}/oauth": {
+   "delete": {
+    "description": "Deletes the stored OAuth tokens and reconnects the server without them.",
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Sign out of one MCP server",
+    "parameters": [
+     {
+      "type": "string",
+      "description": "MCP server slug",
+      "name": "name",
+      "in": "path",
+      "required": true
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "No Content"
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "404": {
+      "description": "Not Found",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "502": {
+      "description": "Bad Gateway",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "503": {
+      "description": "Service Unavailable",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
+  "/admin/mcp-servers/{name}/oauth/start": {
+   "post": {
+    "description": "Runs MCP authorization discovery (protected resource metadata, authorization server metadata, PKCE check, dynamic client registration when no client_id is given) and returns the authorization URL to open in the browser. The response sets a short-lived cookie the callback checks.",
+    "consumes": [
+     "application/json"
+    ],
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Start an OAuth sign-in to one MCP server",
+    "parameters": [
+     {
+      "type": "string",
+      "description": "MCP server slug",
+      "name": "name",
+      "in": "path",
+      "required": true
+     },
+     {
+      "description": "Sign-in request",
+      "name": "request",
+      "in": "body",
+      "required": true,
+      "schema": {
+       "$ref": "#/definitions/admin.startMCPOAuthRequest"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/admin.startMCPOAuthResponse"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "404": {
+      "description": "Not Found",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "502": {
+      "description": "Bad Gateway",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "503": {
+      "description": "Service Unavailable",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
   "/admin/mcp-servers/{name}/reconnect": {
    "post": {
     "produces": [
@@ -1290,7 +1586,7 @@
     "tags": [
      "admin"
     ],
-    "summary": "List virtual MCP servers (config-declared, read-only)",
+    "summary": "List virtual MCP servers (config-declared and admin-managed)",
     "responses": {
      "200": {
       "description": "OK",
@@ -1319,11 +1615,132 @@
       "BearerAuth": []
      }
     ]
+   },
+   "put": {
+    "description": "Members must be existing MCP servers. A new virtual server may not use an MCP server's slug, and config-declared virtual servers are read-only.",
+    "consumes": [
+     "application/json"
+    ],
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Create or update one admin-managed virtual MCP server",
+    "parameters": [
+     {
+      "description": "Virtual MCP server definition",
+      "name": "virtual_server",
+      "in": "body",
+      "required": true,
+      "schema": {
+       "$ref": "#/definitions/admin.upsertMCPVirtualServerRequest"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/admin.mcpVirtualServerResponse"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "502": {
+      "description": "Bad Gateway",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "503": {
+      "description": "Service Unavailable",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
+  "/admin/mcp-virtual-servers/{name}": {
+   "delete": {
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Delete one admin-managed virtual MCP server",
+    "parameters": [
+     {
+      "type": "string",
+      "description": "Virtual MCP server name",
+      "name": "name",
+      "in": "path",
+      "required": true
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "No Content"
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "404": {
+      "description": "Not Found",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "502": {
+      "description": "Bad Gateway",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "503": {
+      "description": "Service Unavailable",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
    }
   },
   "/admin/media/{id}": {
    "get": {
-    "description": "Streams the bytes of an audio or image object the audit log\nreferences by media_id, with its content type. Range requests\nare honored so browser players can seek. An object outside the\ncaller's user-path scope is reported as missing.",
+    "description": "Streams the bytes of an audio or image object the request log\nreferences by media_id, with its content type. Range requests\nare honored so browser players can seek. An object outside the\ncaller's user-path scope is reported as missing.",
     "produces": [
      "application/octet-stream"
     ],
@@ -2174,6 +2591,515 @@
     ]
    }
   },
+  "/admin/request-logs": {
+   "get": {
+    "description": "Entries are slimmed for the wire: request/response bodies,\nper-attempt error bodies, and rewritten revision bodies are\nomitted (bodies_omitted=true). Fetch /admin/request-logs/detail for\nthe full payload of one entry.",
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Get paginated request log entries",
+    "parameters": [
+     {
+      "type": "integer",
+      "description": "Number of days (default 30)",
+      "name": "days",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Start date (YYYY-MM-DD)",
+      "name": "start_date",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "End date (YYYY-MM-DD)",
+      "name": "end_date",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by requested model selector",
+      "name": "requested_model",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by provider name or provider type",
+      "name": "provider",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by HTTP method",
+      "name": "method",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by request path",
+      "name": "path",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by tracked user path subtree",
+      "name": "user_path",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by user paths starting with this text (case-sensitive, index-served)",
+      "name": "user_path_prefix",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by requested or resolved model starting with this text (case-sensitive, index-served)",
+      "name": "model_prefix",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact request id",
+      "name": "request_id",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact session id",
+      "name": "session_id",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by error type",
+      "name": "error_type",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Filter by status code",
+      "name": "status_code",
+      "in": "query"
+     },
+     {
+      "type": "boolean",
+      "description": "Filter by stream mode (true/false)",
+      "name": "stream",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Comma-separated endpoint operations to hide, e.g. mcp,provider_passthrough,audio_speech; other entries, including unclassified ones, stay",
+      "name": "exclude_operation",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Search across request_id/requested_model/provider/method/path/session_id/error_type/error_message",
+      "name": "search",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Page size (default 25, max 100)",
+      "name": "limit",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Offset for pagination",
+      "name": "offset",
+      "in": "query"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/admin.requestLogListResponse"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "403": {
+      "description": "Forbidden",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
+  "/admin/request-logs/conversation": {
+   "get": {
+    "description": "Thread entries carry the request/response bodies the\ntranscript is built from; attempts, request revisions, and\nresponse headers are omitted; redacted request headers and\nper-request usage summaries are retained for continuation\nand prompt-cache visualization.",
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Get the interaction session containing a request log entry",
+    "parameters": [
+     {
+      "type": "string",
+      "description": "Anchor request log entry ID",
+      "name": "log_id",
+      "in": "query",
+      "required": true
+     },
+     {
+      "type": "integer",
+      "description": "Max entries in thread (default 40, max 200)",
+      "name": "limit",
+      "in": "query"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/admin.requestLogConversationResponse"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "403": {
+      "description": "Forbidden",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
+  "/admin/request-logs/detail": {
+   "get": {
+    "description": "Returns one request log entry enriched with usage summary when available.",
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Get request log entry detail",
+    "parameters": [
+     {
+      "type": "string",
+      "description": "Request log entry ID",
+      "name": "log_id",
+      "in": "query",
+      "required": true
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/admin.requestLogEntryResponse"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "403": {
+      "description": "Forbidden",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "404": {
+      "description": "Not Found",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "500": {
+      "description": "Internal Server Error",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
+  "/admin/request-logs/sessions": {
+   "get": {
+    "description": "Groups request log entries by session id into threads and returns\none summary per thread — its latest matching entry and complete\nrequest count — ordered by latest activity. Entries without a session id\nappear as single-entry threads. Filters apply to entries before\ngrouping.",
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Get paginated request log sessions (threads)",
+    "parameters": [
+     {
+      "type": "integer",
+      "description": "Number of days (default 30)",
+      "name": "days",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Start date (YYYY-MM-DD)",
+      "name": "start_date",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "End date (YYYY-MM-DD)",
+      "name": "end_date",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by requested model selector",
+      "name": "requested_model",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by provider name or provider type",
+      "name": "provider",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by HTTP method",
+      "name": "method",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by request path",
+      "name": "path",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by tracked user path subtree",
+      "name": "user_path",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by user paths starting with this text (case-sensitive, index-served)",
+      "name": "user_path_prefix",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by requested or resolved model starting with this text (case-sensitive, index-served)",
+      "name": "model_prefix",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact request id",
+      "name": "request_id",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact session id",
+      "name": "session_id",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by error type",
+      "name": "error_type",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Filter by status code",
+      "name": "status_code",
+      "in": "query"
+     },
+     {
+      "type": "boolean",
+      "description": "Filter by stream mode (true/false)",
+      "name": "stream",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Comma-separated endpoint operations to hide, e.g. mcp,provider_passthrough,audio_speech; other entries, including unclassified ones, stay",
+      "name": "exclude_operation",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Search across request_id/requested_model/provider/method/path/session_id/error_type/error_message",
+      "name": "search",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Page size in threads (default 25, max 100)",
+      "name": "limit",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Offset for pagination",
+      "name": "offset",
+      "in": "query"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/admin.requestLogSessionsListResponse"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "403": {
+      "description": "Forbidden",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
+  "/admin/request-logs/stats": {
+   "get": {
+    "description": "Returns request counts grouped into 2xx/4xx/5xx status classes\nper time bucket, an overall success-rate summary, and average\nrequest duration per provider for the dashboard charts.\nRanges up to 3 days use hourly buckets, longer ranges daily.",
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Get time-bucketed request status and latency stats",
+    "parameters": [
+     {
+      "type": "integer",
+      "description": "Number of days (default 30)",
+      "name": "days",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Start date (YYYY-MM-DD)",
+      "name": "start_date",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "End date (YYYY-MM-DD)",
+      "name": "end_date",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by tracked user path subtree",
+      "name": "user_path",
+      "in": "query"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/requestlog.RequestStats"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "403": {
+      "description": "Forbidden",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
   "/admin/runtime/config": {
    "get": {
     "produces": [
@@ -2294,6 +3220,349 @@
     ]
    }
   },
+  "/admin/usage/benchmark": {
+   "get": {
+    "description": "Treats each direct child of parent as one user, summing its whole subtree, and returns per calendar month the number of active users (at least one request in the month, response-cache hits included), their total cost and the mean, median (p50), p90 and maximum cost per active user. Percentiles interpolate linearly between closest ranks. A user's cost is the one the invoice export reports for it; unpriced_users counts users whose cost is wholly unknown (counted at 0) and partly_priced_users those counted at a known part of it. Every user is counted; nothing is folded into an \"other\" bucket. Usage recorded on parent itself is reported as unattributed_cost. Months are read in the time zone of the X-GoModel-Timezone header (UTC without it); the current month is flagged partial and has no change percentages. A range covers at most 12 months; start_date, end_date and days, which the other usage endpoints take, are ignored. The response holds no user paths unless top_users asks for the highest-cost users of each month.",
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Benchmark the monthly cost per active user of a group",
+    "parameters": [
+     {
+      "type": "string",
+      "description": "IANA time zone months are read in, e.g. Europe/Warsaw (default UTC)",
+      "name": "X-GoModel-Timezone",
+      "in": "header"
+     },
+     {
+      "type": "string",
+      "description": "Group whose direct children are the users, e.g. /eng (default: the credential's scope root, or /)",
+      "name": "parent",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Number of months ending at end_month, 1-12 (default 7: six complete months plus the current one); ignored with start_month",
+      "name": "months",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "First month (YYYY-MM, default: months before end_month)",
+      "name": "start_month",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Last month (YYYY-MM, default and latest: the current month)",
+      "name": "end_month",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "provider (default) or billed; billed requires pricing.markups_enabled",
+      "name": "cost_basis",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "List each month's N highest-cost users (0-50, default 0: aggregates only)",
+      "name": "top_users",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
+      "name": "model",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
+      "name": "provider",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
+      "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact detected session ID",
+      "name": "session_id",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
+      "name": "auth_key_id",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
+      "name": "user_path",
+      "in": "query"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/usage.Benchmark"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "403": {
+      "description": "Forbidden",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "409": {
+      "description": "Conflict",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
+  "/admin/usage/breakdown": {
+   "get": {
+    "description": "Pivots the filtered usage by a row and an optional column dimension. Keys rank by the metric; those past limit fold into a trailing \"other\" key. Period keys follow interval and are never folded. A request with several labels counts once per label.",
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Get a two-dimension usage breakdown",
+    "parameters": [
+     {
+      "type": "string",
+      "description": "Row dimension: model, provider, user_path, label, endpoint, auth_key, period",
+      "name": "rows",
+      "in": "query",
+      "required": true
+     },
+     {
+      "type": "string",
+      "description": "Column dimension (same values, different from rows); omit or none for one column",
+      "name": "columns",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Ranking metric for the top-N cut: cost, tokens, requests (default cost)",
+      "name": "metric",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Keys kept per dimension before the rest fold into other (default 10, max 50)",
+      "name": "limit",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Group user paths by their first N segments (0 keeps full paths, max 16)",
+      "name": "user_path_depth",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Number of days (default 30)",
+      "name": "days",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Start date (YYYY-MM-DD)",
+      "name": "start_date",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "End date (YYYY-MM-DD)",
+      "name": "end_date",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Period grouping: daily, weekly, monthly, yearly (default daily)",
+      "name": "interval",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
+      "name": "model",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
+      "name": "provider",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
+      "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact detected session ID",
+      "name": "session_id",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
+      "name": "auth_key_id",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
+      "name": "user_path",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Cache mode filter: uncached, cached, all (default uncached)",
+      "name": "cache_mode",
+      "in": "query"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/usage.UsageBreakdown"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "403": {
+      "description": "Forbidden",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
   "/admin/usage/daily": {
    "get": {
     "produces": [
@@ -2329,21 +3598,49 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact model name",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
       "name": "model",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by provider name or provider type",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
       "name": "provider",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by request label (exact match)",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
       "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
       "in": "query"
      },
      {
@@ -2353,14 +3650,22 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact managed auth key ID",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
       "name": "auth_key_id",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by tracked user path subtree",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
       "name": "user_path",
       "in": "query"
      },
@@ -2407,6 +3712,310 @@
     ]
    }
   },
+  "/admin/usage/endpoints": {
+   "get": {
+    "description": "Returns per-endpoint token and cost aggregates. Each row names\nthe operation its endpoint belongs to, so endpoints that mean\nthe same thing can be folded: /v1/chat/completions and\n/v1/messages are both chat_completions.",
+    "produces": [
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Get usage breakdown by request endpoint",
+    "parameters": [
+     {
+      "type": "integer",
+      "description": "Number of days (default 30)",
+      "name": "days",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Start date (YYYY-MM-DD)",
+      "name": "start_date",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "End date (YYYY-MM-DD)",
+      "name": "end_date",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
+      "name": "model",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
+      "name": "provider",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
+      "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact detected session ID",
+      "name": "session_id",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
+      "name": "auth_key_id",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
+      "name": "user_path",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Cache mode filter: uncached, cached, all (default uncached)",
+      "name": "cache_mode",
+      "in": "query"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "type": "array",
+       "items": {
+        "$ref": "#/definitions/usage.EndpointUsage"
+       }
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "403": {
+      "description": "Forbidden",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
+  "/admin/usage/invoice": {
+   "get": {
+    "description": "Returns billed usage for the period, one block of model/provider line items per customer user path, with subtotals and a grand total. Amounts are USD. With parent, each direct child of that user path is one customer (usage on the parent itself stays under the parent); without it every user path is its own customer. Requests, tokens and provider cost cover provider-served requests; billed cost also includes billed response-cache hits. The period's days are read in the time zone of the X-GoModel-Timezone header (UTC without it, as API clients send), reported as time_zone. CSV rows carry row_type item, subtotal or total. Requires a GoModel Pro license with the billing entitlement and pricing.markups_enabled.",
+    "produces": [
+     "text/csv",
+     "application/json"
+    ],
+    "tags": [
+     "admin"
+    ],
+    "summary": "Export billed usage as per-customer invoices",
+    "parameters": [
+     {
+      "type": "string",
+      "description": "IANA time zone the period's days are read in, e.g. Europe/Warsaw (default UTC)",
+      "name": "X-GoModel-Timezone",
+      "in": "header"
+     },
+     {
+      "type": "string",
+      "description": "Export format: csv (default, as an attachment) or json",
+      "name": "format",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Bill each direct child of this user path as one customer, e.g. /customers",
+      "name": "parent",
+      "in": "query"
+     },
+     {
+      "type": "integer",
+      "description": "Number of days (default 30)",
+      "name": "days",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Start date (YYYY-MM-DD)",
+      "name": "start_date",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "End date (YYYY-MM-DD)",
+      "name": "end_date",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
+      "name": "model",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
+      "name": "provider",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
+      "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by exact detected session ID",
+      "name": "session_id",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
+      "name": "auth_key_id",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
+      "name": "user_path",
+      "in": "query"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "schema": {
+       "$ref": "#/definitions/usage.Invoice"
+      }
+     },
+     "400": {
+      "description": "Bad Request",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "401": {
+      "description": "Unauthorized",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "403": {
+      "description": "Forbidden",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     },
+     "409": {
+      "description": "Conflict",
+      "schema": {
+       "$ref": "#/definitions/core.GatewayError"
+      }
+     }
+    },
+    "security": [
+     {
+      "BearerAuth": []
+     }
+    ]
+   }
+  },
   "/admin/usage/labels": {
    "get": {
     "description": "Returns per-label token and cost aggregates. Requests carrying\nseveral labels count once per label, so rows overlap and do\nnot sum to the period totals. Unlabelled requests are omitted.",
@@ -2437,21 +4046,49 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact model name",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
       "name": "model",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by provider name or provider type",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
       "name": "provider",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by request label (exact match)",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
       "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
       "in": "query"
      },
      {
@@ -2461,14 +4098,22 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact managed auth key ID",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
       "name": "auth_key_id",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by tracked user path subtree",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
       "name": "user_path",
       "in": "query"
      },
@@ -2544,26 +4189,58 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact model name",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
       "name": "model",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by provider name or provider type",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
       "name": "provider",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by request label (exact match)",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
       "name": "label",
       "in": "query"
      },
      {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
       "type": "string",
-      "description": "Filter by tracked user path subtree",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
       "name": "user_path",
       "in": "query"
      },
@@ -2580,14 +4257,18 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact managed auth key ID",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
       "name": "auth_key_id",
       "in": "query"
      },
      {
       "type": "string",
-      "description": "Search across model, provider, request_id, provider_id, session_id",
+      "description": "Search across model, provider, endpoint, request_id, provider_id, session_id",
       "name": "search",
       "in": "query"
      },
@@ -2666,21 +4347,49 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact model name",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
       "name": "model",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by provider name or provider type",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
       "name": "provider",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by request label (exact match)",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
       "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
       "in": "query"
      },
      {
@@ -2690,14 +4399,22 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact managed auth key ID",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
       "name": "auth_key_id",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by tracked user path subtree",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
       "name": "user_path",
       "in": "query"
      },
@@ -2842,21 +4559,49 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact model name",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
       "name": "model",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by provider name or provider type",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
       "name": "provider",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by request label (exact match)",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
       "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
       "in": "query"
      },
      {
@@ -2866,14 +4611,22 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact managed auth key ID",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
       "name": "auth_key_id",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by tracked user path subtree",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
       "name": "user_path",
       "in": "query"
      },
@@ -2952,21 +4705,49 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact model name",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
       "name": "model",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by provider name or provider type",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
       "name": "provider",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by request label (exact match)",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
       "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
       "in": "query"
      },
      {
@@ -2976,14 +4757,22 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact managed auth key ID",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
       "name": "auth_key_id",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by tracked user path subtree",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
       "name": "user_path",
       "in": "query"
      },
@@ -3108,21 +4897,49 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact model name",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact model names; repeat or comma-separate for several",
       "name": "model",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by provider name or provider type",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by provider names or types; repeat or comma-separate for several",
       "name": "provider",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by request label (exact match)",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by request labels (exact match); repeat for several",
       "name": "label",
+      "in": "query"
+     },
+     {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by exact request endpoints, e.g. /v1/chat/completions,/v1/messages; repeat or comma-separate for several",
+      "name": "endpoint",
+      "in": "query"
+     },
+     {
+      "type": "string",
+      "description": "Filter by comma-separated operations, e.g. chat_completions,embeddings",
+      "name": "operation",
       "in": "query"
      },
      {
@@ -3132,14 +4949,22 @@
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by exact managed auth key ID",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by managed auth key IDs; repeat or comma-separate for several",
       "name": "auth_key_id",
       "in": "query"
      },
      {
-      "type": "string",
-      "description": "Filter by tracked user path subtree",
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "collectionFormat": "multi",
+      "description": "Filter by tracked user path subtrees; repeat for several",
       "name": "user_path",
       "in": "query"
      },
@@ -3391,7 +5216,7 @@
     }
    }
   },
-  "admin.auditConversationResponse": {
+  "admin.requestLogConversationResponse": {
    "type": "object",
    "properties": {
     "anchor_id": {
@@ -3400,7 +5225,7 @@
     "entries": {
      "type": "array",
      "items": {
-      "$ref": "#/definitions/admin.auditLogEntryResponse"
+      "$ref": "#/definitions/admin.requestLogEntryResponse"
      }
     },
     "truncated": {
@@ -3409,7 +5234,7 @@
     }
    }
   },
-  "admin.auditLogEntryResponse": {
+  "admin.requestLogEntryResponse": {
    "type": "object",
    "properties": {
     "alias_used": {
@@ -3422,7 +5247,7 @@
      "type": "string"
     },
     "bodies_omitted": {
-     "description": "BodiesOmitted marks a list entry whose request/response bodies (and\nother heavy payloads) were stripped server-side; the full entry is\navailable from GET /admin/audit/detail. It also tells the dashboard\nthe entry is persisted — a slim entry is never an in-flight request.",
+     "description": "BodiesOmitted marks a list entry whose request/response bodies (and\nother heavy payloads) were stripped server-side; the full entry is\navailable from GET /admin/request-logs/detail. It also tells the dashboard\nthe entry is persisted — a slim entry is never an in-flight request.",
      "type": "boolean"
     },
     "cache_type": {
@@ -3439,7 +5264,7 @@
      "description": "Data contains flexible request/response information as JSON",
      "allOf": [
       {
-       "$ref": "#/definitions/auditlog.LogData"
+       "$ref": "#/definitions/requestlog.LogData"
       }
      ]
     },
@@ -3505,13 +5330,17 @@
     }
    }
   },
-  "admin.auditLogListResponse": {
+  "admin.requestLogListResponse": {
    "type": "object",
    "properties": {
+    "as_of": {
+     "description": "AsOf is when the server read the page, in unix microseconds on its\nclock. A dashboard compares it with the write stamp of another\nreplica's live entry to tell whether this page already counted it.",
+     "type": "integer"
+    },
     "entries": {
      "type": "array",
      "items": {
-      "$ref": "#/definitions/admin.auditLogEntryResponse"
+      "$ref": "#/definitions/admin.requestLogEntryResponse"
      }
     },
     "limit": {
@@ -3525,9 +5354,13 @@
     }
    }
   },
-  "admin.auditSessionsListResponse": {
+  "admin.requestLogSessionsListResponse": {
    "type": "object",
    "properties": {
+    "as_of": {
+     "description": "AsOf: see requestLogListResponse.AsOf.",
+     "type": "integer"
+    },
     "limit": {
      "type": "integer"
     },
@@ -3537,7 +5370,7 @@
     "sessions": {
      "type": "array",
      "items": {
-      "$ref": "#/definitions/admin.auditSessionResponse"
+      "$ref": "#/definitions/admin.requestLogSessionResponse"
      }
     },
     "total": {
@@ -3545,13 +5378,13 @@
     }
    }
   },
-  "auditlog.RequestStats": {
+  "requestlog.RequestStats": {
    "type": "object",
    "properties": {
     "buckets": {
      "type": "array",
      "items": {
-      "$ref": "#/definitions/auditlog.RequestStatsBucket"
+      "$ref": "#/definitions/requestlog.RequestStatsBucket"
      }
     },
     "interval": {
@@ -3560,17 +5393,25 @@
     "provider_latency": {
      "type": "array",
      "items": {
-      "$ref": "#/definitions/auditlog.ProviderLatencySeries"
+      "$ref": "#/definitions/requestlog.ProviderLatencySeries"
      }
     },
     "summary": {
-     "$ref": "#/definitions/auditlog.RequestStatsSummary"
+     "$ref": "#/definitions/requestlog.RequestStatsSummary"
     }
    }
   },
   "admin.budgetListResponse": {
    "type": "object",
    "properties": {
+    "alerts": {
+     "description": "Alerts describes soft budget alerts for the deployment.",
+     "allOf": [
+      {
+       "$ref": "#/definitions/admin.budgetAlertsResponse"
+      }
+     ]
+    },
     "budgets": {
      "type": "array",
      "items": {
@@ -3585,11 +5426,26 @@
   "admin.upsertBudgetRequest": {
    "type": "object",
    "properties": {
+    "alert_thresholds": {
+     "description": "AlertThresholds overrides the default alert thresholds for this budget:\npercentages of the amount, each 1-100. Empty or omitted uses the\ndefaults.",
+     "type": "array",
+     "items": {
+      "type": "integer"
+     }
+    },
     "amount": {
      "type": "number"
     },
     "budget_key": {
      "$ref": "#/definitions/admin.budgetKeyRequest"
+    },
+    "cost_basis": {
+     "description": "CostBasis selects the spend the amount limits: provider (default) or\nbilled (provider cost plus markup, including billed cache hits). billed\nrequires PRICING_MARKUPS_ENABLED and a GoModel Pro license with the\nbilling entitlement.",
+     "type": "string",
+     "enum": [
+      "provider",
+      "billed"
+     ]
     },
     "per_child": {
      "type": "boolean"
@@ -3745,6 +5601,10 @@
       "type": "string"
      }
     },
+    "auth_required": {
+     "description": "AuthRequired reports that the server answered 401 to the last connect.",
+     "type": "boolean"
+    },
     "connected_at": {
      "type": "string"
     },
@@ -3783,6 +5643,14 @@
     },
     "name": {
      "type": "string"
+    },
+    "oauth": {
+     "description": "OAuth is the operator sign-in state; absent when never signed in.",
+     "allOf": [
+      {
+       "$ref": "#/definitions/admin.mcpOAuthViewResponse"
+      }
+     ]
     },
     "prompt_count": {
      "type": "integer"
@@ -3872,6 +5740,23 @@
     }
    }
   },
+  "mcpgateway.ToolCatalog": {
+   "type": "object",
+   "properties": {
+    "servers": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/mcpgateway.ToolCatalogServer"
+     }
+    },
+    "tools": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/mcpgateway.ToolCatalogTool"
+     }
+    }
+   }
+  },
   "mcpgateway.CatalogView": {
    "type": "object",
    "properties": {
@@ -3916,20 +5801,72 @@
     }
    }
   },
+  "admin.startMCPOAuthRequest": {
+   "type": "object",
+   "required": [
+    "redirect_uri"
+   ],
+   "properties": {
+    "client_id": {
+     "type": "string"
+    },
+    "client_secret": {
+     "type": "string"
+    },
+    "redirect_uri": {
+     "type": "string"
+    }
+   }
+  },
+  "admin.startMCPOAuthResponse": {
+   "type": "object",
+   "properties": {
+    "authorization_url": {
+     "type": "string"
+    }
+   }
+  },
   "admin.mcpVirtualServerResponse": {
    "type": "object",
    "properties": {
+    "configured_tool_discovery": {
+     "description": "ConfiguredToolDiscovery is the stored setting: \"off\", \"search\", or \"\"\nto inherit the gateway default. ToolDiscovery is the effective mode.",
+     "type": "string"
+    },
     "conflict": {
      "type": "string"
     },
     "description": {
      "type": "string"
     },
+    "managed": {
+     "type": "boolean"
+    },
     "missing_servers": {
      "type": "array",
      "items": {
       "type": "string"
      }
+    },
+    "name": {
+     "type": "string"
+    },
+    "servers": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "tool_discovery": {
+     "type": "string"
+    }
+   }
+  },
+  "admin.upsertMCPVirtualServerRequest": {
+   "type": "object",
+   "properties": {
+    "description": {
+     "type": "string"
     },
     "name": {
      "type": "string"
@@ -4098,6 +6035,9 @@
     "base_url": {
      "type": "string"
     },
+    "billable": {
+     "type": "boolean"
+    },
     "created_at": {
      "type": "string"
     },
@@ -4115,6 +6055,9 @@
      "items": {
       "type": "string"
      }
+    },
+    "models_mode": {
+     "type": "string"
     },
     "name": {
      "type": "string"
@@ -4173,6 +6116,10 @@
     "base_url": {
      "type": "string"
     },
+    "billable": {
+     "description": "Billable false marks a provider whose cost the caller does not owe the\noperator, such as a customer's own key. Omitted keeps the stored value\n(true for a new provider).",
+     "type": "boolean"
+    },
     "enabled": {
      "type": "boolean"
     },
@@ -4185,11 +6132,15 @@
       "type": "string"
      }
     },
+    "models_mode": {
+     "description": "ModelsMode overrides the global configured provider models mode for\nthis provider: fallback, allowlist, or merge. Empty uses the global mode.",
+     "type": "string"
+    },
     "name": {
      "type": "string"
     },
     "proxy_url": {
-     "description": "ProxyURL may be sent back exactly as the view rendered it (password\nmasked) to keep the stored proxy credentials.",
+     "description": "ProxyURL may be sent back with the password masked, as the view rendered\nit, to keep the stored proxy password, also when the rest of the URL is\nedited.",
      "type": "string"
     },
     "service_account_file": {
@@ -4328,6 +6279,10 @@
   "admin.DashboardConfigResponse": {
    "type": "object",
    "properties": {
+    "BILLED_BUDGETS_ENABLED": {
+     "description": "BilledBudgetsEnabled reports the billed_budgets capability, so the\ndashboard offers budgets on billed cost only where they are accepted.",
+     "type": "string"
+    },
     "BUDGETS_ENABLED": {
      "type": "string"
     },
@@ -4344,6 +6299,28 @@
      "type": "string"
     },
     "GUARDRAILS_ENABLED": {
+     "type": "string"
+    },
+    "INVOICE_EXPORT_ENABLED": {
+     "type": "string"
+    },
+    "LICENSE_BADGE": {
+     "description": "The license a distribution registered (ext.License), so the sidebar\nshows its badge and the days left. Times are RFC 3339 in UTC, windows\nwhole days; all are empty for open-source builds.",
+     "type": "string"
+    },
+    "LICENSE_EXPIRES_AT": {
+     "type": "string"
+    },
+    "LICENSE_NOTICE_DAYS": {
+     "type": "string"
+    },
+    "LICENSE_TRIAL": {
+     "type": "string"
+    },
+    "LICENSE_VALID_UNTIL": {
+     "type": "string"
+    },
+    "LICENSE_WARNING_DAYS": {
      "type": "string"
     },
     "LOGGING_ENABLED": {
@@ -4363,6 +6340,10 @@
      "type": "string"
     },
     "PLUGINS_ENABLED": {
+     "type": "string"
+    },
+    "PRICING_MARKUPS_ENABLED": {
+     "description": "PricingMarkups mirrors pricing.markups_enabled, so the dashboard shows\nbilled cost only when the markup feature is on.",
      "type": "string"
     },
     "RATE_LIMITS_ENABLED": {
@@ -4417,9 +6398,73 @@
     }
    }
   },
+  "usage.Benchmark": {
+   "type": "object",
+   "properties": {
+    "cost_basis": {
+     "type": "string",
+     "enum": [
+      "provider",
+      "billed"
+     ]
+    },
+    "currency": {
+     "type": "string"
+    },
+    "months": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/usage.BenchmarkMonth"
+     }
+    },
+    "parent": {
+     "type": "string"
+    },
+    "time_zone": {
+     "type": "string"
+    }
+   }
+  },
+  "usage.UsageBreakdown": {
+   "type": "object",
+   "properties": {
+    "cells": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/usage.BreakdownCell"
+     }
+    },
+    "column_dimension": {
+     "$ref": "#/definitions/usage.BreakdownDimension"
+    },
+    "columns": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/usage.BreakdownKey"
+     }
+    },
+    "metric": {
+     "$ref": "#/definitions/usage.BreakdownMetric"
+    },
+    "row_dimension": {
+     "$ref": "#/definitions/usage.BreakdownDimension"
+    },
+    "rows": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/usage.BreakdownKey"
+     }
+    }
+   }
+  },
   "usage.DailyUsage": {
    "type": "object",
    "properties": {
+    "billed_cost": {
+     "description": "BilledCost includes the period's billed response-cache hits in every\ncache mode, so a period served only from the cache can appear with no\nrequests.",
+     "type": "number",
+     "x-nullable": true
+    },
     "cache_write_input_tokens": {
      "type": "integer"
     },
@@ -4456,9 +6501,100 @@
     }
    }
   },
+  "usage.EndpointUsage": {
+   "type": "object",
+   "properties": {
+    "billed_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "cache_write_input_tokens": {
+     "type": "integer"
+    },
+    "cached_input_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "cached_input_tokens": {
+     "type": "integer"
+    },
+    "endpoint": {
+     "type": "string"
+    },
+    "input_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "input_tokens": {
+     "type": "integer"
+    },
+    "local_cached_input_tokens": {
+     "type": "integer"
+    },
+    "local_cached_output_tokens": {
+     "type": "integer"
+    },
+    "operation": {
+     "type": "string"
+    },
+    "output_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "output_tokens": {
+     "type": "integer"
+    },
+    "requests": {
+     "type": "integer"
+    },
+    "total_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "total_tokens": {
+     "type": "integer"
+    },
+    "uncached_input_tokens": {
+     "type": "integer"
+    }
+   }
+  },
+  "usage.Invoice": {
+   "type": "object",
+   "properties": {
+    "currency": {
+     "type": "string"
+    },
+    "customers": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/usage.InvoiceCustomer"
+     }
+    },
+    "end_date": {
+     "type": "string"
+    },
+    "parent": {
+     "type": "string"
+    },
+    "start_date": {
+     "type": "string"
+    },
+    "time_zone": {
+     "type": "string"
+    },
+    "total": {
+     "$ref": "#/definitions/usage.InvoiceAmounts"
+    }
+   }
+  },
   "usage.LabelUsage": {
    "type": "object",
    "properties": {
+    "billed_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
     "cache_write_input_tokens": {
      "type": "integer"
     },
@@ -4510,6 +6646,10 @@
   "usage.UsageLogResult": {
    "type": "object",
    "properties": {
+    "as_of": {
+     "description": "AsOf is when the server read the page, in unix microseconds on its\nclock; the admin API sets it. A dashboard compares it with the write\nstamp of another replica's live entry to tell whether this page\nalready counted it.",
+     "type": "integer"
+    },
     "entries": {
      "type": "array",
      "items": {
@@ -4530,6 +6670,10 @@
   "usage.ModelUsage": {
    "type": "object",
    "properties": {
+    "billed_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
     "cache_write_input_tokens": {
      "type": "integer"
     },
@@ -4657,6 +6801,11 @@
      "description": "Rewrite savings: prompt tokens request rewriters removed before the\nprovider call, and the estimated input cost avoided (nil when no\nmatched row had a priced savings estimate).",
      "type": "integer"
     },
+    "total_billed_cost": {
+     "description": "TotalBilledCost is what the period was billed at: provider cost plus\nmarkup. Unlike the other cost fields it includes billed response-cache\nhits in every cache mode, because those are billed to the caller too.",
+     "type": "number",
+     "x-nullable": true
+    },
     "total_cost": {
      "type": "number"
     },
@@ -4703,6 +6852,10 @@
   "usage.UserPathUsage": {
    "type": "object",
    "properties": {
+    "billed_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
     "cache_write_input_tokens": {
      "type": "integer"
     },
@@ -4754,6 +6907,9 @@
     "created_at": {
      "type": "string"
     },
+    "default_params": {
+     "type": "object"
+    },
     "description": {
      "type": "string"
     },
@@ -4772,14 +6928,24 @@
     "model": {
      "type": "string"
     },
+    "params": {
+     "type": "object"
+    },
     "provider_name": {
      "type": "string"
     },
     "provider_type": {
      "type": "string"
     },
+    "reasoning_effort": {
+     "type": "string"
+    },
     "resolved_model": {
      "type": "string"
+    },
+    "response_header_timeout": {
+     "description": "ResponseHeaderTimeout is the per-attempt wait for upstream response\nheaders in seconds; omitted inherits.",
+     "type": "integer"
     },
     "scope_kind": {
      "type": "string"
@@ -4810,6 +6976,10 @@
       "$ref": "#/definitions/virtualmodels.Target"
      }
     },
+    "timeout": {
+     "description": "Timeout is the per-attempt upstream timeout in seconds; omitted inherits.",
+     "type": "integer"
+    },
     "updated_at": {
      "type": "string"
     },
@@ -4827,6 +6997,9 @@
   "admin.upsertVirtualModelRequest": {
    "type": "object",
    "properties": {
+    "default_params": {
+     "type": "object"
+    },
     "description": {
      "type": "string"
     },
@@ -4839,6 +7012,18 @@
     },
     "old_source": {
      "type": "string"
+    },
+    "params": {
+     "description": "Params are forced on every request through this row (null strips a\nkey); DefaultParams fill in keys the client omitted. Keys use Chat\nCompletions spelling.",
+     "type": "object"
+    },
+    "reasoning_effort": {
+     "description": "ReasoningEffort forces the reasoning effort sent upstream (\"none\",\n\"minimal\", \"low\", \"medium\", \"high\", \"xhigh\", or \"max\"); empty keeps the\nclient's value.",
+     "type": "string"
+    },
+    "response_header_timeout": {
+     "description": "ResponseHeaderTimeout overrides HTTP_RESPONSE_HEADER_TIMEOUT, in\nseconds (1 to 86400), for every upstream attempt. Omitted inherits.",
+     "type": "integer"
     },
     "session_affinity": {
      "description": "SessionAffinity keeps a detected session on the target that served it\nbefore. Omitted means enabled; false restores stateless balancing.",
@@ -4862,6 +7047,10 @@
      "description": "StrategyPlugin names the routing-strategy plugin for strategy \"plugin\";\nStrategyConfig holds that plugin's route-scoped settings, validated\nagainst its schema (see GET /admin/plugins, route_fields).",
      "type": "string"
     },
+    "target": {
+     "description": "Target is the config file's name for target_model, accepted so a body\nwritten after the YAML does not silently become an access policy.",
+     "type": "string"
+    },
     "target_model": {
      "type": "string"
     },
@@ -4870,6 +7059,10 @@
      "items": {
       "$ref": "#/definitions/admin.virtualModelTargetRequest"
      }
+    },
+    "timeout": {
+     "description": "Timeout overrides HTTP_TIMEOUT, in seconds (1 to 86400), for every\nupstream attempt of a request through this row. Omitted inherits.",
+     "type": "integer"
     },
     "user_paths": {
      "type": "array",
@@ -4908,7 +7101,7 @@
     "ErrorTypeInternal"
    ]
   },
-  "auditlog.LogData": {
+  "requestlog.LogData": {
    "type": "object",
    "properties": {
     "api_key_hash": {
@@ -4918,7 +7111,7 @@
      "description": "Attempts captures provider calls made for this logical request. SQL\nstores split this into audit_log_attempts; Mongo stores it embedded.",
      "type": "array",
      "items": {
-      "$ref": "#/definitions/auditlog.AttemptSnapshot"
+      "$ref": "#/definitions/requestlog.AttemptSnapshot"
      }
     },
     "error_code": {
@@ -4940,7 +7133,7 @@
      "description": "Failover captures runtime redirect details when translated execution\nmoved from the primary selector to a configured failover target.",
      "allOf": [
       {
-       "$ref": "#/definitions/auditlog.FailoverSnapshot"
+       "$ref": "#/definitions/requestlog.FailoverSnapshot"
       }
      ]
     },
@@ -4948,7 +7141,7 @@
      "description": "Guardrails records the outcome of every guardrail (plugin instance)\nthat ran for the request, in execution order across the prompt,\nresponse and stream phases: what each decided, whether it edited the\nrequest or response, and how it failed. It is the decision trail;\nRequestRevisions is the body trail. A configured step without an\noutcome did not run (an earlier block, a cache hit).",
      "type": "array",
      "items": {
-      "$ref": "#/definitions/auditlog.GuardrailOutcomeSnapshot"
+      "$ref": "#/definitions/requestlog.GuardrailOutcomeSnapshot"
      }
     },
     "labels": {
@@ -4976,10 +7169,10 @@
      }
     },
     "request_revisions": {
-     "description": "RequestRevisions captures the ingress request-rewrite chain: one entry\nper registered rewriter that ran, in application order, followed by the\nprompt-guardrail steps. Rewriters that changed the body carry the\nrewritten body; those that left it alone are recorded with NoChange so\nthe audit trail still shows the step ran. Each prompt guardrail that\nedited the prompt is a changed revision, in step order, carrying the\nrequest as it stood right after that step (the next step's input) with\nits sizes; one that objected (warn, block, respond) or failed without\nediting is a NoChange entry carrying the decision, and a silent allow\nleaves no entry. RequestBody always remains the original client\nrequest; the last changed revision is what was forwarded downstream —\nwhen every step was a no-op there is no such revision and the original\nbody is what went upstream.",
+     "description": "RequestRevisions captures the ingress request-rewrite chain: one entry\nper registered rewriter that ran, in application order, followed by the\nprompt-guardrail steps. Rewriters that changed the body carry the\nrewritten body; those that left it alone are recorded with NoChange so\nthe request log still shows the step ran. Each prompt guardrail that\nedited the prompt is a changed revision, in step order, carrying the\nrequest as it stood right after that step (the next step's input) with\nits sizes; one that objected (warn, block, respond) or failed without\nediting is a NoChange entry carrying the decision, and a silent allow\nleaves no entry. RequestBody always remains the original client\nrequest; the last changed revision is what was forwarded downstream —\nwhen every step was a no-op there is no such revision and the original\nbody is what went upstream.",
      "type": "array",
      "items": {
-      "$ref": "#/definitions/auditlog.RequestRevisionSnapshot"
+      "$ref": "#/definitions/requestlog.RequestRevisionSnapshot"
      }
     },
     "response_body": {},
@@ -5001,10 +7194,10 @@
      "type": "string"
     },
     "workflow_features": {
-     "description": "WorkflowFeatures captures the request-time effective workflow features\nafter runtime caps were applied. This keeps audit views historically accurate\neven if the active process config changes later.",
+     "description": "WorkflowFeatures captures the request-time effective workflow features\nafter runtime caps were applied. This keeps request log views historically accurate\neven if the active process config changes later.",
      "allOf": [
       {
-       "$ref": "#/definitions/auditlog.WorkflowFeaturesSnapshot"
+       "$ref": "#/definitions/requestlog.WorkflowFeaturesSnapshot"
       }
      ]
     }
@@ -5048,18 +7241,18 @@
     }
    }
   },
-  "admin.auditSessionResponse": {
+  "admin.requestLogSessionResponse": {
    "type": "object",
    "properties": {
     "latest": {
-     "$ref": "#/definitions/admin.auditLogEntryResponse"
+     "$ref": "#/definitions/admin.requestLogEntryResponse"
     },
     "request_count": {
      "type": "integer"
     }
    }
   },
-  "auditlog.RequestStatsBucket": {
+  "requestlog.RequestStatsBucket": {
    "type": "object",
    "properties": {
     "requests": {
@@ -5082,7 +7275,7 @@
     }
    }
   },
-  "auditlog.ProviderLatencySeries": {
+  "requestlog.ProviderLatencySeries": {
    "type": "object",
    "properties": {
     "avg_duration_ms": {
@@ -5102,7 +7295,7 @@
     }
    }
   },
-  "auditlog.RequestStatsSummary": {
+  "requestlog.RequestStatsSummary": {
    "type": "object",
    "properties": {
     "avg_duration_ms": {
@@ -5128,17 +7321,55 @@
     }
    }
   },
+  "admin.budgetAlertsResponse": {
+   "type": "object",
+   "properties": {
+    "default_thresholds": {
+     "description": "DefaultThresholds are the alert thresholds, as percentages of the\namount, of every budget without alert_thresholds of its own.",
+     "type": "array",
+     "items": {
+      "type": "integer"
+     }
+    },
+    "enabled": {
+     "description": "Enabled reports that an alert destination exists (a webhook under\nbudgets.alerts.webhooks, or a registered alert sink), so thresholds are\nevaluated. Without one no alert is ever raised.",
+     "type": "boolean"
+    }
+   }
+  },
   "admin.budgetStatusResponse": {
    "type": "object",
    "properties": {
+    "alert_thresholds": {
+     "description": "AlertThresholds are this budget's own alert thresholds, as percentages\nof the amount. Omitted when it uses alerts.default_thresholds.",
+     "type": "array",
+     "items": {
+      "type": "integer"
+     }
+    },
     "amount": {
      "type": "number"
+    },
+    "cost_basis": {
+     "type": "string",
+     "enum": [
+      "provider",
+      "billed"
+     ]
     },
     "created_at": {
      "type": "string"
     },
     "effective_subject": {
      "type": "string"
+    },
+    "enforced_cost_basis": {
+     "description": "EnforcedCostBasis names the spend Spent measures. It is provider for a\nbilled budget while billed budgets are unavailable (no billing\nentitlement or markups disabled); cost_basis keeps the stored basis.",
+     "type": "string",
+     "enum": [
+      "provider",
+      "billed"
+     ]
     },
     "has_usage": {
      "type": "boolean"
@@ -5163,6 +7394,14 @@
     },
     "period_start": {
      "type": "string"
+    },
+    "projected_exhaustion_at": {
+     "description": "ProjectedExhaustionAt is when the budget runs out at that rate. Omitted\nwhen the budget lasts the period or is already spent.",
+     "type": "string"
+    },
+    "projected_spend": {
+     "description": "ProjectedSpend is the spend the period ends on at the rate seen so far\n(spent / period_ratio). Omitted while less than 5% of the period has\nelapsed, and for a per-child template.",
+     "type": "number"
     },
     "remaining": {
      "type": "number"
@@ -5256,6 +7495,120 @@
     }
    }
   },
+  "admin.mcpOAuthViewResponse": {
+   "type": "object",
+   "properties": {
+    "expires_at": {
+     "type": "string"
+    },
+    "issuer": {
+     "type": "string"
+    },
+    "last_error": {
+     "type": "string"
+    },
+    "scopes": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "signed_in_at": {
+     "type": "string"
+    },
+    "status": {
+     "type": "string"
+    }
+   }
+  },
+  "mcpgateway.ToolCatalogServer": {
+   "type": "object",
+   "properties": {
+    "disallowed_user_paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "enabled": {
+     "type": "boolean"
+    },
+    "server": {
+     "type": "string"
+    },
+    "server_name": {
+     "type": "string"
+    },
+    "status": {
+     "$ref": "#/definitions/mcpgateway.ServerStatus"
+    },
+    "transport": {
+     "type": "string"
+    },
+    "user_paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "mcpgateway.ToolCatalogTool": {
+   "type": "object",
+   "properties": {
+    "description": {
+     "type": "string"
+    },
+    "destructive": {
+     "type": "boolean"
+    },
+    "disallowed_user_paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "enabled": {
+     "type": "boolean"
+    },
+    "exposed": {
+     "description": "Exposed is false for a tool the server's allowed_tools /\ndisallowed_tools hide from clients. It says nothing about shadowing.",
+     "type": "boolean"
+    },
+    "name": {
+     "description": "Name is the name that reaches this tool on the aggregated endpoint\n(/mcp, or the virtual server in the filter). It is empty when no such\nname exists: the tool is not exposed, or it is shadowed.",
+     "type": "string"
+    },
+    "read_only": {
+     "type": "boolean"
+    },
+    "server": {
+     "type": "string"
+    },
+    "server_name": {
+     "type": "string"
+    },
+    "shadowed_by": {
+     "description": "ShadowedBy names the server that owns this tool's aggregated name:\ntwo servers produced the same name and the gateway keeps the first\nin slug order, so that name reaches the other server's tool. The tool\nstays callable on /mcp/{server} under UpstreamName.",
+     "type": "string"
+    },
+    "status": {
+     "$ref": "#/definitions/mcpgateway.ServerStatus"
+    },
+    "transport": {
+     "type": "string"
+    },
+    "upstream_name": {
+     "type": "string"
+    },
+    "user_paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
   "mcpgateway.CatalogFeature": {
    "type": "object",
    "properties": {
@@ -5329,6 +7682,9 @@
      "type": "number"
     },
     "batch_output_per_mtok": {
+     "type": "number"
+    },
+    "cache_write_1h_per_mtok": {
      "type": "number"
     },
     "cache_write_per_mtok": {
@@ -5641,11 +7997,201 @@
     }
    }
   },
+  "usage.BenchmarkMonth": {
+   "type": "object",
+   "properties": {
+    "active_users": {
+     "type": "integer"
+    },
+    "max": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "mean": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "mean_change_percent": {
+     "description": "MeanChangePercent and P50ChangePercent compare with the previous month;\nnil for the first month, the partial current month, a month without\nactive users, or a previous month whose value is not positive.",
+     "type": "number",
+     "x-nullable": true
+    },
+    "month": {
+     "type": "string"
+    },
+    "p50": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "p50_change_percent": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "p90": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "partial": {
+     "type": "boolean"
+    },
+    "partly_priced_users": {
+     "type": "integer"
+    },
+    "top_users": {
+     "description": "TopUsers is set only when requested.",
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/usage.BenchmarkUser"
+     }
+    },
+    "total_cost": {
+     "type": "number"
+    },
+    "unattributed_cost": {
+     "description": "UnattributedCost is usage recorded on the parent path itself, which no\nuser carries; it is not part of TotalCost.",
+     "type": "number"
+    },
+    "unpriced_users": {
+     "type": "integer"
+    }
+   }
+  },
+  "usage.BreakdownCell": {
+   "type": "object",
+   "properties": {
+    "billed_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "column": {
+     "type": "integer"
+    },
+    "input_tokens": {
+     "type": "integer"
+    },
+    "output_tokens": {
+     "type": "integer"
+    },
+    "requests": {
+     "type": "integer"
+    },
+    "row": {
+     "type": "integer"
+    },
+    "total_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "total_tokens": {
+     "type": "integer"
+    }
+   }
+  },
+  "usage.BreakdownDimension": {
+   "type": "string",
+   "enum": [
+    "",
+    "model",
+    "provider",
+    "user_path",
+    "label",
+    "endpoint",
+    "auth_key",
+    "period"
+   ],
+   "x-enum-varnames": [
+    "BreakdownNone",
+    "BreakdownModel",
+    "BreakdownProvider",
+    "BreakdownUserPath",
+    "BreakdownLabel",
+    "BreakdownEndpoint",
+    "BreakdownAuthKey",
+    "BreakdownPeriod"
+   ]
+  },
+  "usage.BreakdownKey": {
+   "type": "object",
+   "properties": {
+    "folded": {
+     "type": "integer"
+    },
+    "key": {
+     "type": "string"
+    },
+    "other": {
+     "type": "boolean"
+    }
+   }
+  },
+  "usage.BreakdownMetric": {
+   "type": "string",
+   "enum": [
+    "cost",
+    "tokens",
+    "requests"
+   ],
+   "x-enum-varnames": [
+    "BreakdownMetricCost",
+    "BreakdownMetricTokens",
+    "BreakdownMetricRequests"
+   ]
+  },
+  "usage.InvoiceCustomer": {
+   "type": "object",
+   "properties": {
+    "customer": {
+     "type": "string"
+    },
+    "lines": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/usage.InvoiceLine"
+     }
+    },
+    "subtotal": {
+     "$ref": "#/definitions/usage.InvoiceAmounts"
+    }
+   }
+  },
+  "usage.InvoiceAmounts": {
+   "type": "object",
+   "properties": {
+    "billed_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "effective_markup_percent": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "input_tokens": {
+     "type": "integer"
+    },
+    "output_tokens": {
+     "type": "integer"
+    },
+    "provider_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "requests": {
+     "type": "integer"
+    }
+   }
+  },
   "usage.UsageLogEntry": {
    "type": "object",
    "properties": {
     "auth_key_id": {
      "type": "string"
+    },
+    "billable": {
+     "description": "Billable is false for a request served by a provider configured with\nbillable: false; omitted when billable.",
+     "type": "boolean"
+    },
+    "billed_cost": {
+     "type": "number"
     },
     "cache_type": {
      "type": "string"
@@ -5682,6 +8228,12 @@
      "items": {
       "type": "string"
      }
+    },
+    "markup_percent": {
+     "type": "number"
+    },
+    "markup_selector": {
+     "type": "string"
     },
     "model": {
      "type": "string"
@@ -5737,6 +8289,11 @@
   "usage.SessionUsage": {
    "type": "object",
    "properties": {
+    "billed_cost": {
+     "description": "BilledCost includes the session's billed response-cache hits.",
+     "type": "number",
+     "x-nullable": true
+    },
     "input_cost": {
      "type": "number",
      "x-nullable": true
@@ -5798,6 +8355,9 @@
     "provider": {
      "type": "string"
     },
+    "reasoning_effort": {
+     "type": "string"
+    },
     "weight": {
      "type": "number"
     }
@@ -5812,12 +8372,15 @@
     "provider": {
      "type": "string"
     },
+    "reasoning_effort": {
+     "type": "string"
+    },
     "weight": {
      "type": "number"
     }
    }
   },
-  "auditlog.AttemptSnapshot": {
+  "requestlog.AttemptSnapshot": {
    "type": "object",
    "properties": {
     "duration_ns": {
@@ -5845,7 +8408,7 @@
      "type": "string"
     },
     "response_body": {
-     "description": "ResponseBody and ResponseHeaders capture the raw upstream error response\nof a failed attempt. ResponseBody is the parsed JSON (or a string when the\nbody is not JSON); ResponseHeaders is redacted. Both are populated only\nwhen audit body/header logging is enabled."
+     "description": "ResponseBody and ResponseHeaders capture the raw upstream error response\nof a failed attempt. ResponseBody is the parsed JSON (or a string when the\nbody is not JSON); ResponseHeaders is redacted. Both are populated only\nwhen request log body/header logging is enabled."
     },
     "response_headers": {
      "type": "object",
@@ -5867,7 +8430,7 @@
     }
    }
   },
-  "auditlog.FailoverSnapshot": {
+  "requestlog.FailoverSnapshot": {
    "type": "object",
    "properties": {
     "target_model": {
@@ -5875,7 +8438,7 @@
     }
    }
   },
-  "auditlog.GuardrailOutcomeSnapshot": {
+  "requestlog.GuardrailOutcomeSnapshot": {
    "type": "object",
    "properties": {
     "action": {
@@ -5929,7 +8492,7 @@
     }
    }
   },
-  "auditlog.RequestRevisionSnapshot": {
+  "requestlog.RequestRevisionSnapshot": {
    "type": "object",
    "properties": {
     "body": {
@@ -5960,12 +8523,9 @@
     }
    }
   },
-  "auditlog.WorkflowFeaturesSnapshot": {
+  "requestlog.WorkflowFeaturesSnapshot": {
    "type": "object",
    "properties": {
-    "audit": {
-     "type": "boolean"
-    },
     "budget": {
      "type": "boolean"
     },
@@ -5976,6 +8536,9 @@
      "type": "boolean"
     },
     "guardrails": {
+     "type": "boolean"
+    },
+    "request_logs": {
      "type": "boolean"
     },
     "usage": {
@@ -6006,6 +8569,9 @@
     "created_at": {
      "type": "string"
     },
+    "default_params": {
+     "type": "object"
+    },
     "description": {
      "type": "string"
     },
@@ -6023,8 +8589,20 @@
     "model": {
      "type": "string"
     },
+    "params": {
+     "description": "Params are request parameters forced on every request sent upstream\nthrough this redirect or to this model, replacing the client's values;\na null value strips the key. DefaultParams are filled in only when the\nclient omitted the key. Keys use Chat Completions spelling.",
+     "type": "object"
+    },
     "provider_name": {
      "type": "string"
+    },
+    "reasoning_effort": {
+     "description": "ReasoningEffort, when set, replaces the reasoning effort of every\nrequest sent upstream through this redirect or to this model, whatever\nthe client asked for. Empty leaves the client's value untouched.",
+     "type": "string"
+    },
+    "response_header_timeout": {
+     "description": "ResponseHeaderTimeout overrides HTTP_RESPONSE_HEADER_TIMEOUT, in\nseconds, for every upstream attempt. Nil inherits.",
+     "type": "integer"
     },
     "session_affinity": {
      "description": "SessionAffinity keeps requests of one detected session on the target that\nserved it before, while that target stays available. Tri-state: nil means\nenabled (the default); explicit false restores stateless balancing.",
@@ -6054,6 +8632,10 @@
       "$ref": "#/definitions/virtualmodels.Target"
      }
     },
+    "timeout": {
+     "description": "Timeout overrides HTTP_TIMEOUT, in seconds, for every upstream attempt\nof a request routed through this redirect or to this model. Nil\ninherits (from the target model's policy, then the gateway default).",
+     "type": "integer"
+    },
     "updated_at": {
      "type": "string"
     },
@@ -6078,6 +8660,10 @@
      "type": "number"
     },
     "batch_output_per_mtok": {
+     "type": "number"
+    },
+    "cache_write_1h_per_mtok": {
+     "description": "Anthropic 1-hour TTL cache writes; cache_write_per_mtok prices the default 5-minute ones",
      "type": "number"
     },
     "cache_write_per_mtok": {
@@ -6149,6 +8735,52 @@
      "type": "number"
     },
     "rank": {
+     "type": "integer"
+    }
+   }
+  },
+  "usage.BenchmarkUser": {
+   "type": "object",
+   "properties": {
+    "cost": {
+     "type": "number"
+    },
+    "requests": {
+     "type": "integer"
+    },
+    "user": {
+     "type": "string"
+    }
+   }
+  },
+  "usage.InvoiceLine": {
+   "type": "object",
+   "properties": {
+    "billed_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "effective_markup_percent": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "input_tokens": {
+     "type": "integer"
+    },
+    "model": {
+     "type": "string"
+    },
+    "output_tokens": {
+     "type": "integer"
+    },
+    "provider": {
+     "type": "string"
+    },
+    "provider_cost": {
+     "type": "number",
+     "x-nullable": true
+    },
+    "requests": {
      "type": "integer"
     }
    }
